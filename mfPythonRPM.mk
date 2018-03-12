@@ -13,20 +13,29 @@ endif
 
 .PHONY: rpm _rpmall _rpmprep _setup_update _rpmbuild _rpmdevbuild _rpmsetup
 rpm: _rpmall
-_rpmall: _all _rpmprep _setup_update _rpmsetup _rpmbuild
+	@echo "Running rpm target"
+#	cat $(RPMBUILD_DIR)/setup.py
 
+#_rpmall: _all _rpmprep _setup_update _rpmsetup _rpmbuild
+_rpmall: _all _rpmbuild
+	@echo "Running _rpmall target"
+#	cat $(RPMBUILD_DIR)/setup.py
 # Copy the package skeleton
 # Ensure the existence of the module directory
 # Copy the libraries into python module
-_rpmsetup: _setup_update _rpmprep
+_rpmsetup: _rpmprep _setup_update
 # Change directory into pkg and copy everything into rpm build dir
+	@echo "Running _rpmsetup target"
+#	cat $(RPMBUILD_DIR)/setup.py
 	cd pkg && \
-	find . -name "*" -exec install -D \{\} $(RPMBUILD_DIR)/\{\} \;
+	find . -iname 'setup.*' -prune -o -name "*" -exec install -D \{\} $(RPMBUILD_DIR)/\{\} \;
 # Add a manifest file (may not be necessary
-	echo "include */*.so" > $(RPMBUILD_DIR)/MANIFEST.in
+#	echo "include */*.so" > $(RPMBUILD_DIR)/MANIFEST.in
 
 _rpmbuild: _rpmsetup
-	cd $(RPMBUILD_DIR) && python $(PackageName).py bdist_rpm \
+	@echo "Running _rpmbuild target"
+#	cat $(RPMBUILD_DIR)/setup.py
+	cd $(RPMBUILD_DIR) && python setup.py bdist_rpm \
 	--release $(CMSGEMOS_OS).python$(PYTHON_VERSION) \
 	--binary-only --force-arch=`uname -m`
 # Harvest the crop
@@ -36,44 +45,49 @@ _rpmbuild: _rpmsetup
 	find rpm -name "*.tbz2"   -exec cp -a \{\} rpm/ \;
 
 _setup_update:
+	@echo "Running _setup_update target"
 	$(MakeDir) $(PackagePath)/rpm/RPMBUILD
 
 	if [ -e $(PackagePath)/setup.py ]; then \
 		echo Found $(PackagePath)/setup.py; \
-		cp $(PackagePath)/setup.py $(RPMBUILD_DIR)/$(PackageName).py; \
+		cp $(PackagePath)/setup.py $(RPMBUILD_DIR)/setup.py; \
 	elif [ -e $(PackagePath)/pkg/setup.py ]; then \
 		echo Found $(PackagePath)/pkg/setup.py; \
-		cp $(PackagePath)/pkg/setup.py $(RPMBUILD_DIR)/$(PackageName).py; \
+		cp $(PackagePath)/pkg/setup.py $(RPMBUILD_DIR)/setup.py; \
+	elif [ -e $(PackagePath)/setup/setup.py ]; then \
+		echo Found $(PackagePath)/setup/setup.py; \
+		cp $(PackagePath)/setup/setup.py $(RPMBUILD_DIR)/setup.py; \
 	elif [ -e $(PackagePath)/setup/build/setup.py ]; then \
 		echo Found $(PackagePath)/setup/build/setup.py; \
-		cp $(PackagePath)/setup/build/setup.py $(RPMBUILD_DIR)/$(PackageName).py; \
+		cp $(PackagePath)/setup/build/setup.py $(RPMBUILD_DIR)/setup.py; \
 	elif [ -e $(ProjectPath)/setup/config/setupTemplate.py ]; then \
 		echo Found $(ProjectPath)/setup/config/setupTemplate.py; \
-		cp $(ProjectPath)/setup/config/setupTemplate.py $(RPMBUILD_DIR)/$(PackageName).py; \
+		cp $(ProjectPath)/setup/config/setupTemplate.py $(RPMBUILD_DIR)/setup.py; \
 	elif [ -e $(BUILD_HOME)/config/build/setupTemplate.py ]; then \
 		echo Found $(BUILD_HOME)/config/build/setupTemplate.pyz; \
-		cp $(BUILD_HOME)/config/build/setupTemplate.py $(RPMBUILD_DIR)/$(PackageName).py; \
+		cp $(BUILD_HOME)/config/build/setupTemplate.py $(RPMBUILD_DIR)/setup.py; \
 	else \
 		echo Unable to find any setupTemplate.py; \
 		exit 1; \
 	fi
 
-	sed -i 's#__author__#$(Packager)#'                $(RPMBUILD_DIR)/$(PackageName).py
-	sed -i 's#__project__#$(Project)#'                $(RPMBUILD_DIR)/$(PackageName).py
-	sed -i 's#__summary__#None#'                      $(RPMBUILD_DIR)/$(PackageName).py
-	sed -i 's#__gitrev__#$(GITREV)#'                  $(RPMBUILD_DIR)/$(PackageName).py
-	sed -i 's#__builddate__#$(BUILD_DATE)#'           $(RPMBUILD_DIR)/$(PackageName).py
-	sed -i 's#__package__#$(Package)#'                $(RPMBUILD_DIR)/$(PackageName).py
-	sed -i 's#__packagedir__#$(PackagePath)#'         $(RPMBUILD_DIR)/$(PackageName).py
-	sed -i 's#__packagename__#$(PackageName)#'        $(RPMBUILD_DIR)/$(PackageName).py
-	sed -i 's#__longpackage__#$(LongPackage)#'        $(RPMBUILD_DIR)/$(PackageName).py
-	sed -i 's#__pythonmodules__#$(PythonModules)#'    $(RPMBUILD_DIR)/$(PackageName).py
-	sed -i 's#__version__#$(PACKAGE_FULL_VERSION)#'   $(RPMBUILD_DIR)/$(PackageName).py
-	sed -i 's#__release__#$(CMSGEMOS_OS)#'            $(RPMBUILD_DIR)/$(PackageName).py
-	sed -i 's#__prefix__#$(GEMPYTHON_ROOT)#'          $(RPMBUILD_DIR)/$(PackageName).py
-	sed -i 's#__os__#$(CMSGEMOS_OS)#'                 $(RPMBUILD_DIR)/$(PackageName).py
-	sed -i 's#__platform__#$(CMSGEMOS_PLATFORM)#'     $(RPMBUILD_DIR)/$(PackageName).py
-	sed -i 's#__description__#None#'                  $(RPMBUILD_DIR)/$(PackageName).py
+	sed -i 's#__author__#$(Packager)#'                $(RPMBUILD_DIR)/setup.py
+	sed -i 's#__project__#$(Project)#'                $(RPMBUILD_DIR)/setup.py
+	sed -i 's#__summary__#None#'                      $(RPMBUILD_DIR)/setup.py
+	sed -i 's#__gitrev__#$(GITREV)#'                  $(RPMBUILD_DIR)/setup.py
+	sed -i 's#__builddate__#$(BUILD_DATE)#'           $(RPMBUILD_DIR)/setup.py
+	sed -i 's#__package__#$(Package)#'                $(RPMBUILD_DIR)/setup.py
+	sed -i 's#__packagedir__#$(PackagePath)#'         $(RPMBUILD_DIR)/setup.py
+	sed -i 's#__packagename__#$(PackageName)#'        $(RPMBUILD_DIR)/setup.py
+	sed -i 's#__longpackage__#$(LongPackage)#'        $(RPMBUILD_DIR)/setup.py
+	sed -i 's#__pythonmodules__#$(PythonModules)#'    $(RPMBUILD_DIR)/setup.py
+	sed -i 's#__version__#$(PACKAGE_FULL_VERSION)#'   $(RPMBUILD_DIR)/setup.py
+	sed -i 's#__release__#$(CMSGEMOS_OS)#'            $(RPMBUILD_DIR)/setup.py
+	sed -i 's#__prefix__#$(GEMPYTHON_ROOT)#'          $(RPMBUILD_DIR)/setup.py
+	sed -i 's#__os__#$(CMSGEMOS_OS)#'                 $(RPMBUILD_DIR)/setup.py
+	sed -i 's#__platform__#$(CMSGEMOS_PLATFORM)#'     $(RPMBUILD_DIR)/setup.py
+	sed -i 's#__description__#None#'                  $(RPMBUILD_DIR)/setup.py
+#	cat $(RPMBUILD_DIR)/setup.py
 
 	if [ -e $(PackagePath)/setup.cfg ]; then \
 		echo Found $(PackagePath)/setup.cfg; \
@@ -81,6 +95,9 @@ _setup_update:
 	elif [ -e $(PackagePath)/pkg/setup.cfg ]; then \
 		echo Found $(PackagePath)/pkg/setup.cfg; \
 		cp $(PackagePath)/pkg/setup.cfg $(RPMBUILD_DIR)/setup.cfg; \
+	elif [ -e $(PackagePath)/setup/setup.cfg ]; then \
+		echo Found $(PackagePath)/setup/setup.cfg; \
+		cp $(PackagePath)/setup/setup.cfg $(RPMBUILD_DIR)/setup.cfg; \
 	elif [ -e $(PackagePath)/setup/build/setup.cfg ]; then \
 		echo Found $(PackagePath)/setup/build/setup.cfg; \
 		cp $(PackagePath)/setup/build/setup.cfg $(RPMBUILD_DIR)/setup.cfg; \
@@ -115,5 +132,8 @@ _setup_update:
 
 .PHONY: cleanrpm _cleanrpm
 cleanrpm: _cleanrpm
+	@echo "Running cleanrpm target"
+
 _cleanrpm:
-	-rm -rf rpm
+	@echo "Running _cleanrpm target"
+	@rm -rf rpm
