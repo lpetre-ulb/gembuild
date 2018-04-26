@@ -14,19 +14,16 @@ endif
 .PHONY: rpm _rpmall _rpmprep _setup_update _rpmbuild _rpmdevbuild _rpmsetup
 rpm: _rpmall
 	@echo "Running rpm target"
-#	cat $(RPMBUILD_DIR)/setup.py
 
 #_rpmall: _all _rpmprep _setup_update _rpmsetup _rpmbuild
 _rpmall: _all _rpmbuild
 	@echo "Running _rpmall target"
-#	cat $(RPMBUILD_DIR)/setup.py
 # Copy the package skeleton
 # Ensure the existence of the module directory
 # Copy the libraries into python module
 _rpmsetup: _rpmprep _setup_update
 # Change directory into pkg and copy everything into rpm build dir
 	@echo "Running _rpmsetup target"
-#	cat $(RPMBUILD_DIR)/setup.py
 	cd pkg && \
 	find . -iname 'setup.*' -prune -o -name "*" -exec install -D \{\} $(RPMBUILD_DIR)/\{\} \;
 # Add a manifest file (may not be necessary
@@ -34,7 +31,6 @@ _rpmsetup: _rpmprep _setup_update
 
 _rpmbuild: _rpmsetup
 	@echo "Running _rpmbuild target"
-#	cat $(RPMBUILD_DIR)/setup.py
 	cd $(RPMBUILD_DIR) && python setup.py bdist_rpm \
 	--release $(CMSGEMOS_OS).python$(PYTHON_VERSION) \
 	--binary-only --force-arch=`uname -m`
@@ -87,7 +83,6 @@ _setup_update:
 	sed -i 's#__os__#$(CMSGEMOS_OS)#'                 $(RPMBUILD_DIR)/setup.py
 	sed -i 's#__platform__#$(CMSGEMOS_PLATFORM)#'     $(RPMBUILD_DIR)/setup.py
 	sed -i 's#__description__#None#'                  $(RPMBUILD_DIR)/setup.py
-#	cat $(RPMBUILD_DIR)/setup.py
 
 	if [ -e $(PackagePath)/setup.cfg ]; then \
 		echo Found $(PackagePath)/setup.cfg; \

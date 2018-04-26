@@ -43,7 +43,7 @@ $(info OS Detected: $(CMSGEMOS_OS))
 MakeDir=mkdir -p
 
 ## Version variables from Makefile and ShortPackage
-ShortPackageLoc    = $(shell echo "$(ShortPackage)" | tr '[:lower:]' '[:upper:]')
+ShortPackageLoc := $(shell echo "$(ShortPackage)" | tr '[:lower:]' '[:upper:]')
 PACKAGE_VER_MAJOR ?= $($(ShortPackageLoc)_VER_MAJOR)
 PACKAGE_VER_MINOR ?= $($(ShortPackageLoc)_VER_MINOR)
 PACKAGE_VER_PATCH ?= $($(ShortPackageLoc)_VER_PATCH)
