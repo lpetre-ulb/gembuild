@@ -1,7 +1,10 @@
 # Created with insights from
 ## amc13/config/mfPythonRPMRules.mk
 
+ifndef INSTALL_PATH
 INSTALL_PATH = /opt/cmsgemos
+endif
+
 ProjectPath  ?= $(BUILD_HOME)/$(Project)
 PackagePath  ?= $(BUILD_HOME)/$(Project)
 RPMBUILD_DIR = $(PackagePath)/rpm

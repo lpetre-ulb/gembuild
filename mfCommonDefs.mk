@@ -1,9 +1,11 @@
 BUILD_HOME := $(shell dirname `pwd`)
-# $(info Using GEMPLOTTING_ROOT=$(GEMPLOTTING_ROOT))
 $(info Using BUILD_HOME=$(BUILD_HOME))
 
 # cmsgemos config. This section should be sourced from /opt/cmsgemos/config
-CMSGEMOS_ROOT     := /opt/cmsgemos
+ifndef INSTALL_PATH
+CMSGEMOS_ROOT := /opt/cmsgemos
+endif
+
 CMSGEMOS_PLATFORM := $(shell python -c "import platform; print(platform.platform())")
 CMSGEMOS_OS       := "unknown.os"
 
