@@ -1,4 +1,4 @@
-BUILD_HOME := $(shell dirname `pwd`)
+BUILD_HOME ?= $(shell dirname `pwd`)
 $(info Using BUILD_HOME=$(BUILD_HOME))
 
 # cmsgemos config. This section should be sourced from /opt/cmsgemos/config

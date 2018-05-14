@@ -45,6 +45,7 @@ _rpmbuild: _rpmsetup
 
 _setup_update:
 	@echo "Running _setup_update target"
+	@echo "PackagePath $PackagePath"
 	$(MakeDir) $(PackagePath)/rpm/RPMBUILD
 
 	if [ -e $(PackagePath)/setup.py ]; then \
