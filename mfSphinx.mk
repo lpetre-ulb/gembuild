@@ -4,7 +4,7 @@
 # You can set these variables from the command line.
 DOCBASE	      = $(PackagePath)/doc
 SPHINXOPTS    =
-SPHINXBUILD   = sphinx-build
+SPHINXBUILD   = python $(shell which sphinx-build)
 PAPER         =
 SOURCEDIR     = $(DOCBASE)
 BUILDDIR      = $(DOCBASE)/_build
