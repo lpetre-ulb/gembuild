@@ -14,9 +14,21 @@ ifndef PythonModules
 	$(error Python module names missing "PythonModules")
 endif
 
-.PHONY: rpm _rpmall _rpmprep _setup_update _rpmbuild _rpmdevbuild _rpmsetup
+.PHONY: pip rpm _rpmall _rpmprep _setup_update _rpmbuild _rpmdevbuild _rpmsetup _bdistbuild _sdistbuild _harvest
+pip: _bdistbuild _sdistbuild
+	@echo "Running pip target"
+# Harvest the crop
+	find rpm -name "*.tar.gz" -print0 -exec mv \{\} rpm/ \;
+	find rpm -name "*.tgz"    -print0 -exec mv \{\} rpm/ \;
+	find rpm -name "*.tbz2"   -print0 -exec mv \{\} rpm/ \;
+
 rpm: _rpmall
 	@echo "Running rpm target"
+# Harvest the crop
+	find rpm -name "*.rpm"    -print0 -exec mv \{\} rpm/ \;
+	find rpm -name "*.tar.gz" -print0 -exec mv \{\} rpm/ \;
+	find rpm -name "*.tgz"    -print0 -exec mv \{\} rpm/ \;
+	find rpm -name "*.tbz2"   -print0 -exec mv \{\} rpm/ \;
 
 #_rpmall: _all _rpmprep _setup_update _rpmsetup _rpmbuild
 _rpmall: _all _rpmbuild
@@ -37,11 +49,21 @@ _rpmbuild: _rpmsetup
 	cd $(RPMBUILD_DIR) && python setup.py bdist_rpm \
 	--release $(CMSGEMOS_OS).python$(PYTHON_VERSION) \
 	--binary-only --force-arch=`uname -m`
+
+_bdistbuild: _rpmsetup
+	@echo "Running _tarbuild target"
+	cd $(RPMBUILD_DIR) && python setup.py bdist
+
+_sdistbuild: _rpmsetup
+	@echo "Running _tarbuild target"
+	cd $(RPMBUILD_DIR) && python setup.py sdist
+
+_harvest: _rpmbuild
 # Harvest the crop
-	find rpm -name "*.rpm"    -exec cp -a \{\} rpm/ \;
-	find rpm -name "*.tar.gz" -exec cp -a \{\} rpm/ \;
-	find rpm -name "*.tgz"    -exec cp -a \{\} rpm/ \;
-	find rpm -name "*.tbz2"   -exec cp -a \{\} rpm/ \;
+	find rpm -name "*.rpm"    -print0 -exec mv \{\} rpm/ \;
+	find rpm -name "*.tar.gz" -print0 -exec mv \{\} rpm/ \;
+	find rpm -name "*.tgz"    -print0 -exec mv \{\} rpm/ \;
+	find rpm -name "*.tbz2"   -print0 -exec mv \{\} rpm/ \;
 
 _setup_update:
 	@echo "Running _setup_update target"
