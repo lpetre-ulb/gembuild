@@ -21,12 +21,12 @@ _rpmbuild: _spec_update
 .PHONY: _spec_update	
 _spec_update:
 	mkdir -p ${PackagePath}/rpm
-	cp ${BUILD_HOME}/config/specTemplate.spec ${PackagePath}/rpm/${PackageName}.spec
+	cp ${BUILD_HOME}/${Project}/config/specTemplate.spec ${PackagePath}/rpm/${PackageName}.spec
 	sed -i 's#__package__#${Package}#' ${PackagePath}/rpm/${PackageName}.spec
 	sed -i 's#__packagename__#${PackageName}#' ${PackagePath}/rpm/${PackageName}.spec
 	sed -i 's#__version__#$(PACKAGE_VER_MAJOR).$(PACKAGE_VER_MINOR).$(PACKAGE_VER_PATCH)#' ${PackagePath}/rpm/${PackageName}.spec
 	sed -i 's#__release__#${PACKAGE_RELEASE}.${CMSGEMOS_OS}#' ${PackagePath}/rpm/${PackageName}.spec
-	sed -i 's#__prefix__#${CACTUS_ROOT}#' ${PackagePath}/rpm/${PackageName}.spec
+	sed -i 's#__prefix__#${PackagePath}#' ${PackagePath}/rpm/${PackageName}.spec
 	sed -i 's#__sources_dir__#${RPMBUILD_DIR}/SOURCES#' ${PackagePath}/rpm/${PackageName}.spec
 	sed -i 's#__packagedir__#${PackagePath}#' ${PackagePath}/rpm/${PackageName}.spec
 	sed -i 's#__os__#${CMSGEMOS_OS}#' ${PackagePath}/rpm/${PackageName}.spec

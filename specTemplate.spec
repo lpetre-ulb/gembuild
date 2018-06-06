@@ -47,9 +47,7 @@ __description__
 #
 %install
 rm -rf $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT/%{_prefix}/{bin,lib,include,etc}
-mkdir -p $RPM_BUILD_ROOT/%{_prefix}/{etc,scripts}
-mkdir -p $RPM_BUILD_ROOT/%{_prefix}/etc/{tcds,maps}
+mkdir -p $RPM_BUILD_ROOT/%{_prefix}/{bin,lib,include,scripts}
 
 if [ -d %{_packagedir}/bin ]; then
   cd %{_packagedir}/bin; \
@@ -89,7 +87,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_prefix}/bin
 %{_prefix}/lib
 %{_prefix}/include
-%{_prefix}/etc
 %{_prefix}/scripts
 
 %post
