@@ -31,7 +31,7 @@ License: __license_
 URL: %{_url}
 BuildRoot: %{_tmppath}/%{_packagename}-%{_version}-%{_release}-buildroot
 Prefix: %{_prefix}
-Requires: __requireslist__
+#Requires: __requireslist__
 
 %description
 __description__
