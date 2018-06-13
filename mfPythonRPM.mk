@@ -47,7 +47,7 @@ _rpmsetup: _rpmprep _setup_update
 _rpmbuild: _rpmsetup
 	@echo "Running _rpmbuild target"
 	cd $(RPMBUILD_DIR) && python setup.py bdist_rpm \
-	--release $(CMSGEMOS_OS).python$(PYTHON_VERSION) \
+	--release $(PACKAGE_NOARCH_RELEASE).python$(PYTHON_VERSION) \
 	--binary-only --force-arch=noarch
 
 _bdistbuild: _rpmsetup
@@ -86,7 +86,7 @@ _setup_update:
 		echo Found $(ProjectPath)/setup/config/setupTemplate.py; \
 		cp $(ProjectPath)/setup/config/setupTemplate.py $(RPMBUILD_DIR)/setup.py; \
 	elif [ -e $(BUILD_HOME)/config/build/setupTemplate.py ]; then \
-		echo Found $(BUILD_HOME)/config/build/setupTemplate.pyz; \
+		echo Found $(BUILD_HOME)/config/build/setupTemplate.py; \
 		cp $(BUILD_HOME)/config/build/setupTemplate.py $(RPMBUILD_DIR)/setup.py; \
 	else \
 		echo Unable to find any setupTemplate.py; \
@@ -96,15 +96,16 @@ _setup_update:
 	sed -i 's#__author__#$(Packager)#'                $(RPMBUILD_DIR)/setup.py
 	sed -i 's#__project__#$(Project)#'                $(RPMBUILD_DIR)/setup.py
 	sed -i 's#__summary__#None#'                      $(RPMBUILD_DIR)/setup.py
-	sed -i 's#__gitrev__#$(GITREV)#'                  $(RPMBUILD_DIR)/setup.py
-	sed -i 's#__builddate__#$(BUILD_DATE)#'           $(RPMBUILD_DIR)/setup.py
 	sed -i 's#__package__#$(Package)#'                $(RPMBUILD_DIR)/setup.py
 	sed -i 's#__packagedir__#$(PackagePath)#'         $(RPMBUILD_DIR)/setup.py
 	sed -i 's#__packagename__#$(PackageName)#'        $(RPMBUILD_DIR)/setup.py
 	sed -i 's#__longpackage__#$(LongPackage)#'        $(RPMBUILD_DIR)/setup.py
 	sed -i 's#__pythonmodules__#$(PythonModules)#'    $(RPMBUILD_DIR)/setup.py
-	sed -i 's#__version__#$(PACKAGE_FULL_VERSION)#'   $(RPMBUILD_DIR)/setup.py
-	sed -i 's#__release__#$(CMSGEMOS_OS)#'            $(RPMBUILD_DIR)/setup.py
+	sed -i 's#___gitrev___#$(GITREV)#'                $(RPMBUILD_DIR)/setup.py
+	sed -i 's#___gitver___#$(GIT_VERSION)#'           $(RPMBUILD_DIR)/setup.py
+	sed -i 's#___version___#$(PACKAGE_FULL_VERSION)#' $(RPMBUILD_DIR)/setup.py
+	sed -i 's#___release___#$(BUILD_VERSION)#'        $(RPMBUILD_DIR)/setup.py
+	sed -i 's#___builddate___#$(BUILD_DATE)#'         $(RPMBUILD_DIR)/setup.py
 	sed -i 's#__prefix__#$(GEMPYTHON_ROOT)#'          $(RPMBUILD_DIR)/setup.py
 	sed -i 's#__os__#$(CMSGEMOS_OS)#'                 $(RPMBUILD_DIR)/setup.py
 	sed -i 's#__platform__#$(CMSGEMOS_PLATFORM)#'     $(RPMBUILD_DIR)/setup.py
