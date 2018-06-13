@@ -48,7 +48,7 @@ _rpmbuild: _rpmsetup
 	@echo "Running _rpmbuild target"
 	cd $(RPMBUILD_DIR) && python setup.py bdist_rpm \
 	--release $(CMSGEMOS_OS).python$(PYTHON_VERSION) \
-	--binary-only --force-arch=`uname -m`
+	--binary-only --force-arch=noarch
 
 _bdistbuild: _rpmsetup
 	@echo "Running _tarbuild target"
