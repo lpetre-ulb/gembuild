@@ -57,7 +57,7 @@ _rpmarm: pip
 	cd $(RPMBUILD_DIR) && python setup.py bdist_rpm \
 	--release peta_linux.python$(PYTHON_VERSION) \
 	--force-arch=noarch --spec-only
-	rpmbuild -bb --define "_topdir $(RPMBUILD_DIR)/arm" --define "_binary_payload 1" $(RPMBUILD_DIR)/dist/reg_interface.spec --clean
+	rpmbuild -bb --define "_topdir $(RPMBUILD_DIR)/arm" --define "_binary_payload 1" $(RPMBUILD_DIR)/dist/${PackageName}.spec --clean
 
 _bdistbuild: _rpmsetup
 	@echo "Running _tarbuild target"
