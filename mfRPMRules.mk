@@ -14,7 +14,11 @@ _rpmall: _all _spec_update _rpmbuild
 .PHONY: _rpmbuild
 _rpmbuild: _spec_update
 	mkdir -p ${RPMBUILD_DIR}/{RPMS/{arm,noarch,i586,i686,x86_64},SPECS,BUILD,SOURCES,SRPMS}
-	rpmbuild -bb -bl --buildroot=${RPMBUILD_DIR}/BUILD --target ${Arch} --define  "_topdir ${RPMBUILD_DIR}" rpm/${PackageName}.spec
+ifeq ($(Arch),arm)
+	rpmbuild -bb -bl --buildroot=${RPMBUILD_DIR}/BUILD --target ${Arch} --define "_topdir ${RPMBUILD_DIR}" --define "_binary_payload 1" rpm/${PackageName}.spec
+else
+	rpmbuild -bb -bl --buildroot=${RPMBUILD_DIR}/BUILD --target ${Arch} --define "_topdir ${RPMBUILD_DIR}" rpm/${PackageName}.spec
+endif
 	find  ${RPMBUILD_DIR} -name "*.rpm" -exec mv {} $(PackagePath)/rpm \;
 
 

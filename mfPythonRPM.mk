@@ -31,7 +31,7 @@ rpm: _rpmall
 	find rpm -name "*.tbz2"   -print0 -exec mv \{\} rpm/ \;
 
 #_rpmall: _all _rpmprep _setup_update _rpmsetup _rpmbuild
-_rpmall: _all _rpmbuild
+_rpmall: _all _rpmbuild 
 	@echo "Running _rpmall target"
 # Copy the package skeleton
 # Ensure the existence of the module directory
@@ -48,7 +48,16 @@ _rpmbuild: _rpmsetup
 	@echo "Running _rpmbuild target"
 	cd $(RPMBUILD_DIR) && python setup.py bdist_rpm \
 	--release $(CMSGEMOS_OS).python$(PYTHON_VERSION) \
-	--binary-only --force-arch=noarch
+	--binary-only --force-arch=noarch 
+
+_rpmarm: pip
+	@echo "Running _rpmarm target"
+	mkdir -p $(RPMBUILD_DIR)/arm/SOURCES
+	cp $(RPMBUILD_DIR)/$(Package)*.tar.gz $(RPMBUILD_DIR)/arm/SOURCES/
+	cd $(RPMBUILD_DIR) && python setup.py bdist_rpm \
+	--release peta_linux.python$(PYTHON_VERSION) \
+	--force-arch=noarch --spec-only
+	rpmbuild -bb --define "_topdir $(RPMBUILD_DIR)/arm" --define "_binary_payload 1" $(RPMBUILD_DIR)/dist/reg_interface.spec --clean
 
 _bdistbuild: _rpmsetup
 	@echo "Running _tarbuild target"
