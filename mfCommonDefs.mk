@@ -50,7 +50,8 @@ PACKAGE_VER_MAJOR ?= $($(ShortPackageLoc)_VER_MAJOR)
 PACKAGE_VER_MINOR ?= $($(ShortPackageLoc)_VER_MINOR)
 PACKAGE_VER_PATCH ?= $($(ShortPackageLoc)_VER_PATCH)
 
-BUILD_VERSION ?= 1.0.0
+#BUILD_VERSION ?= 1
+BUILD_VERSION:= $(shell ./config/tag2rel.sh | awk '{split($$0,a," "); print a[4];}' | awk '{split($$0,b,":"); print b[2];}')
 
 PACKAGE_FULL_VERSION ?= $(PACKAGE_VER_MAJOR).$(PACKAGE_VER_MINOR).$(PACKAGE_VER_PATCH)
 PACKAGE_NOARCH_RELEASE ?= $(BUILD_VERSION).$(GITREV)git
