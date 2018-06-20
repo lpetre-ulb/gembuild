@@ -110,6 +110,7 @@ then
     then
         ## only kept for legacy reason, don't put this in your tag
         basever=${version%-*}
+        prerel=${version##*-}
         version=${version%-*}
         pretag="-git"
         relnum=0
@@ -119,6 +120,7 @@ then
     then
         ## only kept for legacy reason, don't put this in your tag
         basever=${version%-*}
+        prerel=${version##*-}
         version=${version%-*}
         pretag="-dev"
         relnum=0
