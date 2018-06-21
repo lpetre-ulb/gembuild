@@ -45,7 +45,7 @@ _rpmbuild: _sdistbuild
 _rpmarm: pip
 	@echo "Running _rpmarm target"
 	mkdir -p $(RPMBUILD_DIR)/arm/SOURCES
-	cp $(RPMBUILD_DIR)/$(Package)*.tar.gz $(RPMBUILD_DIR)/arm/SOURCES/
+	cp $(RPMBUILD_DIR)/$(Package)*.tgz $(RPMBUILD_DIR)/arm/SOURCES/
 	cd $(RPMBUILD_DIR) && python setup.py bdist_rpm \
 	--release $(PACKAGE_NOARCH_RELEASE).peta_linux.python$(PYTHON_VERSION) \
 	--force-arch=noarch --spec-only
