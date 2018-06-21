@@ -42,15 +42,14 @@ _rpmbuild: _sdistbuild
 	--release $(PACKAGE_NOARCH_RELEASE).$(CMSGEMOS_OS).python$(PYTHON_VERSION) \
 	--force-arch=noarch
 
-_rpmarm: _sdistbuild
+_rpmarm: _rpmsetup
 	@echo "Running _rpmarm target"
-	mkdir -p $(RPMBUILD_DIR)/arm/SOURCES
-	cp $(RPMBUILD_DIR)/$(Package)*.tgz $(RPMBUILD_DIR)/arm/SOURCES/
-	cd $(RPMBUILD_DIR) && python setup.py \
-	egg_info --tag-build=$(PREREL_VERSION) \
+	cd $(RPMBUILD_DIR) && python setup.py sdist --formats=gztar \
 	bdist_rpm \
 	--release $(PACKAGE_NOARCH_RELEASE).peta_linux.python$(PYTHON_VERSION) \
 	--force-arch=noarch --spec-only
+	mkdir -p $(RPMBUILD_DIR)/arm/SOURCES
+	cp $(RPMBUILD_DIR)/dist/*.tar.gz $(RPMBUILD_DIR)/arm/SOURCES/
 	rpmbuild -bb --define "_topdir $(RPMBUILD_DIR)/arm" --define "_binary_payload 1" $(RPMBUILD_DIR)/dist/${PackageName}.spec --clean
 
 _bdistbuild: _rpmsetup
