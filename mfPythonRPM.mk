@@ -42,7 +42,7 @@ _rpmbuild: _sdistbuild
 	--release $(PACKAGE_NOARCH_RELEASE).$(CMSGEMOS_OS).python$(PYTHON_VERSION) \
 	--force-arch=noarch
 
-_rpmarm: pip
+_rpmarm: _sdistbuild
 	@echo "Running _rpmarm target"
 	mkdir -p $(RPMBUILD_DIR)/arm/SOURCES
 	cp $(RPMBUILD_DIR)/$(Package)*.tgz $(RPMBUILD_DIR)/arm/SOURCES/
