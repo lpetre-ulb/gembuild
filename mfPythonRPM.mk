@@ -46,7 +46,9 @@ _rpmarm: _sdistbuild
 	@echo "Running _rpmarm target"
 	mkdir -p $(RPMBUILD_DIR)/arm/SOURCES
 	cp $(RPMBUILD_DIR)/$(Package)*.tgz $(RPMBUILD_DIR)/arm/SOURCES/
-	cd $(RPMBUILD_DIR) && python setup.py bdist_rpm \
+	cd $(RPMBUILD_DIR) && python setup.py \
+	egg_info --tag-build=$(PREREL_VERSION) \
+	bdist_rpm \
 	--release $(PACKAGE_NOARCH_RELEASE).peta_linux.python$(PYTHON_VERSION) \
 	--force-arch=noarch --spec-only
 	rpmbuild -bb --define "_topdir $(RPMBUILD_DIR)/arm" --define "_binary_payload 1" $(RPMBUILD_DIR)/dist/${PackageName}.spec --clean
