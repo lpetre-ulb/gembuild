@@ -20,7 +20,7 @@
 #
 # Binary RPM specified attributed (lib and bin)
 #
-Name: %{_project}-%{_packagename}
+Name: %{_packagename}
 Summary: %{_summary}
 Version: %{_version}
 Release: %{_release}
