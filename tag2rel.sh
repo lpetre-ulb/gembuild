@@ -94,7 +94,7 @@ then
     basever=$version
     if [ ${revision} = "0" ]
     then
-        relver=1
+        relver=1.0.0.dev
     else
         ## needs a version bump somehow
         # relver=0.0.$revision.dev
