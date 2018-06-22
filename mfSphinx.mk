@@ -2,9 +2,10 @@
 #
 
 # You can set these variables from the command line.
-DOCBASE	      = $(PackagePath)/doc
+DOCBASE	      = $(Project)/doc
 SPHINXOPTS    =
-SPHINXBUILD   = python $(shell which sphinx-build)
+#SPHINXBUILD   = python $(shell which sphinx-build)
+SPHINXBUILD   = ~/.local/bin/sphinx-build #temporary hack
 PAPER         =
 SOURCEDIR     = $(DOCBASE)
 BUILDDIR      = $(DOCBASE)/_build
