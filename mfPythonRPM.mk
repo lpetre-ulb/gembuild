@@ -10,6 +10,10 @@ PackagePath  ?= $(BUILD_HOME)/$(Project)
 RPMBUILD_DIR = $(PackagePath)/rpm
 #
 
+ifndef PACKAGE_FULL_RELEASE
+PACKAGE_FULL_RELEASE ?= $(PACKAGE_NOARCH_RELEASE).$(CMSGEMOS_OS)
+endif
+
 ifndef PythonModules
 	$(error Python module names missing "PythonModules")
 endif
