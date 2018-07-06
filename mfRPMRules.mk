@@ -7,6 +7,16 @@
 
 RPMBUILD_DIR=${PackagePath}/rpm/RPMBUILD
 
+ifndef BUILD_COMPILER
+BASE_COMPILER=$(subst -,_,$(CC))
+BUILD_COMPILER :=$(BASE_COMPILER)$(shell $(CC) -dumpversion | sed -e 's/\./_/g')
+endif
+
+ifndef PACKAGE_FULL_RELEASE
+# would like to use the correct %?{dist}
+PACKAGE_FULL_RELEASE = $(BUILD_VERSION).$(GITREV)git.$(CMSGEMOS_OS).$(BUILD_COMPILER)
+endif
+
 .PHONY: rpm _rpmall
 rpm: _rpmall
 _rpmall: _all _spec_update _rpmbuild
@@ -26,10 +36,13 @@ endif
 _spec_update:
 	mkdir -p ${PackagePath}/rpm
 	cp ${BUILD_HOME}/${Project}/config/specTemplate.spec ${PackagePath}/rpm/${PackageName}.spec
+
+	sed -i 's#__gitrev__#$(GITREV)#' $(PackagePath)/rpm/$(PackageName).spec
+	sed -i 's#__builddate__#$(BUILD_DATE)#' $(PackagePath)/rpm/$(PackageName).spec
 	sed -i 's#__package__#${Package}#' ${PackagePath}/rpm/${PackageName}.spec
 	sed -i 's#__packagename__#${PackageName}#' ${PackagePath}/rpm/${PackageName}.spec
 	sed -i 's#__version__#$(PACKAGE_VER_MAJOR).$(PACKAGE_VER_MINOR).$(PACKAGE_VER_PATCH)#' ${PackagePath}/rpm/${PackageName}.spec
-	sed -i 's#__release__#${CMSGEMOS_OS}#' ${PackagePath}/rpm/${PackageName}.spec
+	sed -i 's#__release__#$(PACKAGE_FULL_RELEASE)#' ${PackagePath}/rpm/${PackageName}.spec
 	sed -i 's#__prefix__#/opt/${Package}#' ${PackagePath}/rpm/${PackageName}.spec
 	sed -i 's#__sources_dir__#${RPMBUILD_DIR}/SOURCES#' ${PackagePath}/rpm/${PackageName}.spec
 	sed -i 's#__packagedir__#${PackagePath}#' ${PackagePath}/rpm/${PackageName}.spec

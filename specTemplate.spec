@@ -81,11 +81,11 @@ rm -rf $RPM_BUILD_ROOT
 # Files that go in the binary RPM
 #
 %files
-%defattr(-,root,root,-)
+%defattr(-,root,root,0755)
 
 %dir
-%{_prefix}/bin
-%{_prefix}/lib
+%attr(0755,root,root) %{_prefix}/bin
+%attr(0755,root,root) %{_prefix}/lib
 %{_prefix}/include
 %{_prefix}/scripts
 
