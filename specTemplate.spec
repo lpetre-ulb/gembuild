@@ -36,6 +36,18 @@ Prefix: %{_prefix}
 %description
 __description__
 
+%package -n %{_packagename}-devel
+Summary: Development package for %{_summary}
+
+%description -n %{_packagename}-devel
+__description__
+
+# %package -n %{_packagename}-debuginfo
+# Summary: Debuginfo for %{_summary}
+
+# %description -n %{_packagename}-debuginfo
+# __description__
+
 %pre
 
 #%setup 
@@ -47,16 +59,26 @@ __description__
 #
 %install
 rm -rf $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT/%{_prefix}/{bin,lib,include,scripts}
+mkdir -p $RPM_BUILD_ROOT/%{_prefix}/{bin,lib,include,etc,share,scripts}
+mkdir -p $RPM_BUILD_ROOT/usr/lib/debug%{_prefix}/{bin,lib}
+mkdir -p $RPM_BUILD_ROOT/usr/src/debug/%{_project}/%{_packagename}-%{_version}
 
 if [ -d %{_packagedir}/bin ]; then
   cd %{_packagedir}/bin; \
   find . -name "*"  -exec install -D -m 755 {} $RPM_BUILD_ROOT/%{_prefix}/bin/{} \;
 fi
 
+if [ -d %{_packagedir}/src ]; then
+  cd %{_packagedir}/src; \
+  find . -name "*"  -exec install -D -m 644 {} $RPM_BUILD_ROOT/%{_prefix}/src/{} \;
+  # find src -name '*.cc' -fprintf rpm/debug.source "%p\0";
+fi
+
 if [ -d %{_packagedir}/include ]; then
   cd %{_packagedir}/include; \
-  find . \( -name "*.hpp"  -o -name "*.hxx" \)  -exec install -D -m 644 {} $RPM_BUILD_ROOT/%{_prefix}/include/{} \;
+  find . \( -name "*.hpp" -o -name "*.hxx" -o -name "*.h" -o -name "*.hh" \) \
+       -exec install -D -m 644 {} $RPM_BUILD_ROOT/%{_prefix}/include/{} \;
+  # find include -name '*.h' -fprintf rpm/debug.include "%p\0";
 fi
 
 if [ -d %{_packagedir}/lib ]; then
@@ -66,13 +88,28 @@ fi
 
 if [ -d %{_packagedir}/etc ]; then 
   cd %{_packagedir}/etc; \
-  find ./ -name ".svn" -prune -o -name "*" -type f -exec install -D -m 655 {} $RPM_BUILD_ROOT/%{_prefix}/etc/{} \;
+  find ./ \( -name ".svn" -name ".git" \) -prune -o -name "*" -type f \
+       -exec install -D -m 655 {} $RPM_BUILD_ROOT/%{_prefix}/etc/{} \;
 fi
 
 if [ -d %{_packagedir}/scripts ]; then
   cd %{_packagedir}/scripts; \
-  find ./ -name ".svn" -prune -o -name "*" -type f -exec install -D -m 655 {} $RPM_BUILD_ROOT/%{_prefix}/scripts/{} \;
+  find ./ -name ".svn" -prune -o -name "*" -type f \
+       -exec install -D -m 655 {} $RPM_BUILD_ROOT/%{_prefix}/scripts/{} \;
 fi
+
+# #create debug.source - SLC6 beardy wierdo "feature"
+# cd %{_packagedir}
+# touch rpm/debug.include
+# touch rpm/debug.source
+# #find src include -name '*.h' -print > rpm/debug.source -o -name '*.cc' -print > rpm/debug.source
+
+# # Copy all sources and include files for debug RPMs
+# cat %{_packagedir}/rpm/debug.source | sort -z -u | egrep -v -z '(<internal>|<built-in>)$' | ( cpio -pd0mL --quiet "$RPM_BUILD_ROOT/usr/src/debug/%{_project}/%{_packagename}-%{_version}" )
+# cat %{_packagedir}/rpm/debug.include | sort -z -u | egrep -v -z '(<internal>|<built-in>)$' | ( cpio -pd0mL --quiet "$RPM_BUILD_ROOT/usr/src/debug/%{_project}/%{_packagename}-%{_version}" )
+# # correct permissions on the created directories
+# cd "$RPM_BUILD_ROOT/usr/src/debug/"
+# find ./ -type d -exec chmod 755 {} \;
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -86,8 +123,26 @@ rm -rf $RPM_BUILD_ROOT
 %dir
 %attr(0755,root,root) %{_prefix}/bin
 %attr(0755,root,root) %{_prefix}/lib
-%{_prefix}/include
 %{_prefix}/scripts
+
+#
+# Files that go in the devel RPM
+#
+%files -n %{_packagename}-devel
+%defattr(-,root,root,0755)
+
+%dir
+%{_prefix}/include
+
+# #
+# # Files that go in the debuginfo RPM
+# #
+# %files -n %{_packagename}-debuginfo
+# %defattr(-,root,root,0755)
+
+# %dir
+# /usr/lib/debug
+# /usr/src/debug
 
 %post
 
