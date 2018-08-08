@@ -2,7 +2,7 @@
 #
 
 # You can set these variables from the command line.
-DOCBASE	      = $(Project)/doc
+DOCBASE	      = doc
 SPHINXOPTS    =
 #SPHINXBUILD   = python $(shell which sphinx-build)
 SPHINXBUILD   = ~/.local/bin/sphinx-build #temporary hack
