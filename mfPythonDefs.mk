@@ -10,7 +10,7 @@ PYTHONCFLAGS = $(shell pkg-config python --cflags)
 PYTHONLIBS   = $(shell pkg-config python --libs)
 PYTHONGLIBS  = $(shell pkg-config python --glibs)
 
-# IncludeDirs+=$(PYTHON_INCLUDE_PREFIX)
+IncludeDirs+=$(PYTHON_INCLUDE_PREFIX)
 
 # DependentLibraries+=python$(PYTHON_VERSION)
 
