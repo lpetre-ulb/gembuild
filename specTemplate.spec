@@ -38,21 +38,25 @@ __description__
 
 %package -n %{_packagename}-devel
 Summary: Development package for %{_summary}
+Requires: %{_packagename}
 
 %description -n %{_packagename}-devel
 __description__
 
 # %package -n %{_packagename}-debuginfo
 # Summary: Debuginfo for %{_summary}
+# Requires: %{_packagename}
 
 # %description -n %{_packagename}-debuginfo
 # __description__
 
-%pre
+# %pre
 
-#%setup 
+# %prep
 
-%build
+# %setup
+
+# %build
 
 #
 # Prepare the list of files that are the input to the binary and devel RPMs
@@ -83,13 +87,13 @@ fi
 
 if [ -d %{_packagedir}/lib ]; then
   cd %{_packagedir}/lib; \
-  find . -name "*" -exec install -D -m 644 {} $RPM_BUILD_ROOT/%{_prefix}/lib/{} \;
+  find . -name "*" -exec install -D -m 755 {} $RPM_BUILD_ROOT/%{_prefix}/lib/{} \;
 fi
 
-if [ -d %{_packagedir}/etc ]; then 
+if [ -d %{_packagedir}/etc ]; then
   cd %{_packagedir}/etc; \
   find ./ \( -name ".svn" -name ".git" \) -prune -o -name "*" -type f \
-       -exec install -D -m 655 {} $RPM_BUILD_ROOT/%{_prefix}/etc/{} \;
+       -exec install -D -m 644 {} $RPM_BUILD_ROOT/%{_prefix}/etc/{} \;
 fi
 
 if [ -d %{_packagedir}/scripts ]; then
@@ -119,10 +123,11 @@ rm -rf $RPM_BUILD_ROOT
 #
 %files
 %defattr(-,root,root,0755)
+# %attr(0755,root,root) %{_prefix}/lib/*.so
 
 %dir
-%attr(0755,root,root) %{_prefix}/bin
-%attr(0755,root,root) %{_prefix}/lib
+%{_prefix}/bin
+%{_prefix}/lib
 %{_prefix}/scripts
 
 #

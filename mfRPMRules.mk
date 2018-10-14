@@ -27,12 +27,13 @@ _rpmbuild: _spec_update
 ifeq ($(Arch),arm)
 	rpmbuild -bb -bl --buildroot=${RPMBUILD_DIR}/BUILD --target ${Arch} --define "_topdir ${RPMBUILD_DIR}" --define "_binary_payload 1" rpm/${PackageName}.spec
 else
-	rpmbuild -bb -bl --buildroot=${RPMBUILD_DIR}/BUILD --target ${Arch} --define "_topdir ${RPMBUILD_DIR}" rpm/${PackageName}.spec
+	rpmbuild --quiet -ba -bl --buildroot=${RPMBUILD_DIR}/BUILD --target ${Arch} \
+		--define "_topdir ${RPMBUILD_DIR}" rpm/${PackageName}.spec
 endif
 	find  ${RPMBUILD_DIR} -name "*.rpm" -exec mv {} $(PackagePath)/rpm \;
 
 
-.PHONY: _spec_update	
+.PHONY: _spec_update
 _spec_update:
 	mkdir -p ${PackagePath}/rpm
 	cp ${BUILD_HOME}/${Project}/config/specTemplate.spec ${PackagePath}/rpm/${PackageName}.spec
@@ -59,4 +60,3 @@ _spec_update:
 cleanrpm: _cleanrpm
 _cleanrpm:
 	-rm -r rpm
-
