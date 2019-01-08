@@ -74,7 +74,8 @@ fi
 
 if [ -d %{_packagedir}/src ]; then
   cd %{_packagedir}/src; \
-  find . -name "*"  -exec install -D -m 644 {} $RPM_BUILD_ROOT/%{_prefix}/src/{} \;
+  find . \( -name "*.cpp" -o -name "*.cxx" -o -name "*.c" -o -name "*.C" -o -name "*.cc" \) \
+       -exec install -D -m 644 {} $RPM_BUILD_ROOT/%{_prefix}/src/{} \;
   # find src -name '*.cc' -fprintf rpm/debug.source "%p\0";
 fi
 
@@ -87,7 +88,7 @@ fi
 
 if [ -d %{_packagedir}/lib ]; then
   cd %{_packagedir}/lib; \
-  find . -name "*" -exec install -D -m 755 {} $RPM_BUILD_ROOT/%{_prefix}/lib/{} \;
+  find . -name "*.so" -exec install -D -m 755 {} $RPM_BUILD_ROOT/%{_prefix}/lib/{} \;
 fi
 
 if [ -d %{_packagedir}/etc ]; then
@@ -123,18 +124,24 @@ rm -rf $RPM_BUILD_ROOT
 #
 %files
 %defattr(-,root,root,0755)
-# %attr(0755,root,root) %{_prefix}/lib/*.so
+%attr(0755,root,root) %{_prefix}/lib/*.so
 
 %dir
 %{_prefix}/bin
-%{_prefix}/lib
 %{_prefix}/scripts
 
 #
 # Files that go in the devel RPM
 #
+# %define add_arm_libs %( if [[ '__buildarch__' =~ "arm" ]] || [ -d 'lib/arm' ]; then echo "0" ; else echo "1"; fi )
+%define add_arm_libs %( if [ -d 'lib/arm' ]; then echo "1" ; else echo "0"; fi )
+%define is_arm  %( if [[ '__buildarch__' =~ "arm" ]]; then echo "1" ; else echo "0"; fi )
+
 %files -n %{_packagename}-devel
 %defattr(-,root,root,0755)
+%if %add_arm_libs
+%attr(0755,root,root) %{_prefix}/lib/arm/*.so
+%endif
 
 %dir
 %{_prefix}/include
