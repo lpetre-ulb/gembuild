@@ -17,6 +17,24 @@ ifndef PACKAGE_FULL_RELEASE
 PACKAGE_FULL_RELEASE = $(BUILD_VERSION).$(GITREV)git.$(CMSGEMOS_OS).$(BUILD_COMPILER)
 endif
 
+ifndef REQUIRED_PACKAGE_LIST
+REQUIRED_PACKAGE_LIST=$(shell awk 'BEGIN{IGNORECASE=1} /define $(PackageName)_REQUIRED_PACKAGE_LIST/ {print $$3;}' $(PackagePath)/include/packageinfo.h)
+endif
+
+ifndef BUILD_REQUIRED_PACKAGE_LIST
+BUILD_REQUIRED_PACKAGE_LIST=$(shell awk 'BEGIN{IGNORECASE=1} /define $(PackageName)_BUILD_REQUIRED_PACKAGE_LIST/ {print $$3;}' $(PackagePath)/include/packageinfo.h)
+endif
+
+REQUIRES_LIST=0
+ifndef REQUIRED_PACKAGE_LIST
+REQUIRES_LIST=1
+endif
+
+BUILD_REQUIRES_LIST=0
+ifndef BUILD_REQUIRED_PACKAGE_LIST
+BUILD_REQUIRES_LIST=1
+endif
+
 .PHONY: rpm _rpmall
 rpm: _rpmall
 _rpmall: _all _spec_update _rpmbuild
@@ -26,9 +44,13 @@ _rpmbuild: _spec_update _rpmprep
 	@mkdir -p ${RPMBUILD_DIR}/{RPMS/{arm,noarch,i586,i686,x86_64},SPECS,BUILD,SOURCES,SRPMS}
 ifeq ($(Arch),arm)
 	rpmbuild -bb -bl --buildroot=${RPMBUILD_DIR}/BUILD --target ${Arch} \
+		--define "_requires $(REQUIRES_LIST)" \
+		--define "_build_requires $(BUILD_REQUIRES_LIST)" \
 		--define "_topdir ${RPMBUILD_DIR}" --define "_binary_payload 1" rpm/${PackageName}.spec
 else
 	rpmbuild --quiet -ba -bl --buildroot=${RPMBUILD_DIR}/BUILD --target ${Arch} \
+		--define "_requires $(REQUIRES_LIST)" \
+		--define "_build_requires $(BUILD_REQUIRES_LIST)" \
 		--define "_topdir ${RPMBUILD_DIR}" rpm/${PackageName}.spec
 endif
 	find  ${RPMBUILD_DIR} -name "*.rpm" -exec mv {} $(PackagePath)/rpm \;
@@ -54,7 +76,7 @@ _spec_update:
 	sed -i 's#__packagename__#$(PackageName)#' $(PackagePath)/rpm/$(PackageName).spec
 	sed -i 's#__version__#$(PACKAGE_VER_MAJOR).$(PACKAGE_VER_MINOR).$(PACKAGE_VER_PATCH)#' $(PackagePath)/rpm/$(PackageName).spec
 	sed -i 's#__release__#$(PACKAGE_FULL_RELEASE)#' $(PackagePath)/rpm/$(PackageName).spec
-	sed -i 's#__prefix__#/opt/$(Package)#' $(PackagePath)/rpm/$(PackageName).spec
+	sed -i 's#__prefix__#$(INSTALL_PREFIX)#' $(PackagePath)/rpm/$(PackageName).spec
 	sed -i 's#__sources_dir__#$(RPMBUILD_DIR)/SOURCES#' $(PackagePath)/rpm/$(PackageName).spec
 	sed -i 's#__packagedir__#$(PackagePath)#' $(PackagePath)/rpm/$(PackageName).spec
 	sed -i 's#__os__#$(CMSGEMOS_OS)#' $(PackagePath)/rpm/$(PackageName).spec
@@ -65,6 +87,8 @@ _spec_update:
 	sed -i 's#__description__#None#' $(PackagePath)/rpm/$(PackageName).spec
 	sed -i 's#__url__#None#' $(PackagePath)/rpm/$(PackageName).spec
 	sed -i 's#__buildarch__#$(Arch)#' $(PackagePath)/rpm/$(PackageName).spec
+	sed -i 's#__requires_list__#$(REQUIRED_PACKAGE_LIST)#' $(PackagePath)/rpm/$(PackageName).spec
+	sed -i 's#__build_requires_list__#$(BUILD_REQUIRED_PACKAGE_LIST)#' $(PackagePath)/rpm/$(PackageName).spec
 
 
 .PHONY: cleanrpm _cleanrpm
