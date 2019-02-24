@@ -19,3 +19,7 @@
 
 #Don't ignore makefiles
 !*.mk
+
+# Don't ignore CMake files
+!*.cmake
+
