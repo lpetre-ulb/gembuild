@@ -97,8 +97,9 @@ function(xdaq_import_lib name)
     find_library(
         xdaq_${name}_library
         ${name}
+        NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH
+        HINTS ENV XDAQ_ROOT
         PATHS /opt/xdaq/
-        ENV XDAQ_ROOT
         PATH_SUFFIXES lib lib64
         DOC "Root directory of the xDAQ installation")
 
@@ -115,8 +116,9 @@ function(xdaq_import_lib name)
     find_file(
         xdaq_${name}_header_location
         ${xdaq_${name}_header}
+        NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH
+        HINTS ENV XDAQ_ROOT
         PATHS /opt/xdaq/
-        ENV XDAQ_ROOT
         PATH_SUFFIXES include
         DOC "Root directory of the xDAQ installation")
 
