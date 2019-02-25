@@ -59,8 +59,9 @@ function(cactus_import_lib name)
     find_library(
         cactus_${name}_library
         cactus_${name}
+        NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH
+        HINTS ENV CACTUS_ROOT
         PATHS /opt/cactus/
-        ENV CACTUS_ROOT
         PATH_SUFFIXES lib lib64
         DOC "Root directory of the CACTUS installation")
 
@@ -77,8 +78,9 @@ function(cactus_import_lib name)
     find_file(
         cactus_${name}_header_location
         ${cactus_${name}_header}
+        NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH
+        HINTS ENV CACTUS_ROOT
         PATHS /opt/cactus/
-        ENV CACTUS_ROOT
         PATH_SUFFIXES include
         DOC "Root directory of the CACTUS installation")
 
