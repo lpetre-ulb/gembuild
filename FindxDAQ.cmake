@@ -106,7 +106,7 @@ function(_xdaq_import_lib name)
 
     # Try to find the library
     find_library(
-        xdaq_${name}_library
+        xDAQ_${uname}_LIBRARY
         ${name}
         NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH
         HINTS ENV XDAQ_ROOT
@@ -114,9 +114,9 @@ function(_xdaq_import_lib name)
         PATH_SUFFIXES lib lib64
         DOC "Root directory of the xDAQ installation")
 
-    mark_as_advanced(xdaq_${name}_library)
+    mark_as_advanced(xDAQ_${uname}_LIBRARY)
 
-    if(NOT xdaq_${name}_library)
+    if(NOT xDAQ_${uname}_LIBRARY)
         set(xDAQ_FOUND FALSE PARENT_SCOPE)
         set(xDAQ_${uname}_FOUND FALSE PARENT_SCOPE)
 
@@ -128,8 +128,8 @@ function(_xdaq_import_lib name)
     endif()
 
     # Try to find the headers
-    find_file(
-        xdaq_${name}_header_location
+    find_path(
+        xDAQ_${uname}_INCLUDE_DIR
         ${xdaq_${name}_header}
         NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH
         HINTS ENV XDAQ_ROOT
@@ -137,9 +137,9 @@ function(_xdaq_import_lib name)
         PATH_SUFFIXES include
         DOC "Root directory of the xDAQ installation")
 
-    mark_as_advanced(xdaq_${name}_header_location)
+    mark_as_advanced(xDAQ_${uname}_INCLUDE_DIR)
 
-    if(NOT xdaq_${name}_header_location)
+    if(NOT xDAQ_${uname}_INCLUDE_DIR)
         set(xDAQ_FOUND FALSE PARENT_SCOPE)
         set(xDAQ_${uname}_FOUND FALSE PARENT_SCOPE)
 
@@ -149,9 +149,6 @@ function(_xdaq_import_lib name)
         # Do not create the target
         return()
     endif()
-    # Remove the trailing part of the path
-    string(REPLACE ${xdaq_${name}_header} ""
-                   xdaq_${name}_header_location ${xdaq_${name}_header_location})
 
     # Create target
     add_library(xDAQ::${name} SHARED IMPORTED)
@@ -160,25 +157,25 @@ function(_xdaq_import_lib name)
     set_property(
         TARGET xDAQ::${name}
         PROPERTY IMPORTED_LOCATION
-        ${xdaq_${name}_library})
+        ${xDAQ_${uname}_LIBRARY})
 
     # Set include path
     set_property(
         TARGET xDAQ::${name}
         APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES
-        ${xdaq_${name}_header_location})
+        ${xDAQ_${uname}_INCLUDE_DIR})
     set_property(
         TARGET xDAQ::${name}
         APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
-        ${xdaq_${name}_header_location})
+        ${xDAQ_${uname}_INCLUDE_DIR})
     set_property(
         TARGET xDAQ::${name}
         APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES
-        ${xdaq_${name}_header_location}/linux)
+        ${xDAQ_${uname}_INCLUDE_DIR}/linux)
     set_property(
         TARGET xDAQ::${name}
         APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
-        ${xdaq_${name}_header_location}/linux)
+        ${xDAQ_${uname}_INCLUDE_DIR}/linux)
 
     # Dependencies aren't written into .so as they should be, so we need to
     # link explicitely
