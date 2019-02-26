@@ -6,6 +6,9 @@
 
 include(CMakeParseArguments)
 
+# Exported variables
+set(xDAQ_FOUND TRUE)
+
 # List of all supported libs
 set(xdaq_all_libs "")
 
@@ -62,6 +65,20 @@ if(xDAQ_FIND_VERSION)
     message(WARNING "xDAQ version ${xDAQ_FIND_VERSION} was requested, but version checking is not supported")
 endif()
 
+# Check that all requested libs are known
+foreach(lib ${xDAQ_FIND_COMPONENTS})
+    list(FIND "${xdaq_all_libs}" ${lib} found)
+    if(NOT found EQUAL -1)
+        if(xDAQ_FIND_REQUIRED)
+            message(SEND_ERROR "Unknown xDAQ library ${lib} was requested. This is probably due to a programming error.")
+        endif()
+        set(xDAQ_FOUND FALSE)
+        set(xDAQ_${ulib}_FOUND FALSE)
+        message("a false")
+        list(REMOVE_ITEM xDAQ_FIND_COMPONENTS ${lib})
+    endif()
+endforeach()
+
 # Check for threading libraries only if required
 set(xdaq_need_threads FALSE)
 
@@ -84,16 +101,8 @@ endif()
 
 # Creates an imported target for the given lib
 function(_xdaq_import_lib name)
-    # Check that the lib exists
-    list(FIND "${xdaq_all_libs}" ${name} found)
-    if(NOT found EQUAL -1)
-        if(xDAQ_FIND_REQUIRED)
-            message(SEND_ERROR "xDAQ library ${name} was requested, but it doesn't exist. This is probably due to a programming error.")
-        else()
-            # Do not create the target
-            return()
-        endif()
-    endif()
+    string(TOUPPER ${name} uname)
+    set(xDAQ_${uname}_FOUND TRUE PARENT_SCOPE)
 
     # Try to find the library
     find_library(
@@ -108,12 +117,14 @@ function(_xdaq_import_lib name)
     mark_as_advanced(xdaq_${name}_library)
 
     if(NOT xdaq_${name}_library)
+        set(xDAQ_FOUND FALSE PARENT_SCOPE)
+        set(xDAQ_${uname}_FOUND FALSE PARENT_SCOPE)
+
         if(xDAQ_FIND_REQUIRED)
             message(SEND_ERROR "Could not find shared object file for xDAQ library ${name}")
-        else()
-            # Do not create the target
-            return()
         endif()
+        # Do not create the target
+        return()
     endif()
 
     # Try to find the headers
@@ -129,12 +140,14 @@ function(_xdaq_import_lib name)
     mark_as_advanced(xdaq_${name}_header_location)
 
     if(NOT xdaq_${name}_header_location)
+        set(xDAQ_FOUND FALSE PARENT_SCOPE)
+        set(xDAQ_${uname}_FOUND FALSE PARENT_SCOPE)
+
         if(xDAQ_FIND_REQUIRED)
             message(SEND_ERROR "Could not find header files for xDAQ library ${name}")
-        else()
-            # Do not create the target
-            return()
         endif()
+        # Do not create the target
+        return()
     endif()
     # Remove the trailing part of the path
     string(REPLACE ${xdaq_${name}_header} ""
@@ -191,9 +204,22 @@ foreach(lib IN LISTS xdaq_required_libs)
 endforeach()
 
 # Print some debug info
+if(NOT xDAQ_FOUND)
+    message(STATUS "The following xDAQ libraries are missing:")
+    foreach(lib ${xdaq_required_libs})
+        string(TOUPPER ${lib} ulib)
+        if(NOT xDAQ_${ulib}_FOUND)
+            message(STATUS "  ${lib}")
+        endif()
+    endforeach()
+endif()
+
 message(STATUS "Found the following xDAQ libraries:")
 foreach(lib ${xdaq_required_libs})
-    message(STATUS "  ${lib}")
+    string(TOUPPER ${lib} ulib)
+    if(xDAQ_${ulib}_FOUND)
+        message(STATUS "  ${lib}")
+    endif()
 endforeach()
 
 # i2o requires an additional definition
@@ -214,6 +240,7 @@ if(NOT found EQUAL -1)
     # Maybe we shouldn't fail if not REQUIRED...
     if(NOT xdaq_uuid_library)
         message(SEND_ERROR "Could not find libuuid, required by xDAQ library toolbox")
+        set(xDAQ_FOUND FALSE)
     endif()
     set_property(TARGET xDAQ::toolbox
                  APPEND PROPERTY INTERFACE_LINK_LIBRARIES
