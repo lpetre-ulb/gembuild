@@ -34,11 +34,12 @@ _xdaq_library(logudpappender HEADER "log4cplus/log4judpappender.h"
 _xdaq_library(logxmlappender HEADER "log/xmlappender/version.h"
                              DEPENDS config log4cplus)
 _xdaq_library(mimetic HEADER "mimetic/version.h")
+_xdaq_library(occi HEADER "oci.h")
 _xdaq_library(peer HEADER "pt/version.h" DEPENDS config toolbox xcept xoap THREADS)
 _xdaq_library(toolbox HEADER "toolbox/version.h"
                       DEPENDS asyncresolv cgicc log4cplus THREADS)
 _xdaq_library(tstoreclient HEADER "tstore/client/version.h")
-_xdaq_library(tstoreutils HEADER "tstore/utils/version.h")
+_xdaq_library(tstoreutils HEADER "tstore/utils/version.h" DEPENDS occi)
 _xdaq_library(tstore HEADER "tstore/version.h"
                      DEPENDS tstoreclient tstoreutils xalan-c)
 _xdaq_library(xalan-c HEADER "xalanc/Include/XalanVersion.hpp")
