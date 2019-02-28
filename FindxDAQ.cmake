@@ -14,11 +14,12 @@ set(xdaq_all_libs "")
 
 # Declares a library that can be required using the COMPONENTS argument
 function(_xdaq_library name)
-    cmake_parse_arguments(ARG "THREADS" "HEADER" "DEPENDS" "" ${ARGN})
+    cmake_parse_arguments(ARG "THREADS;NO_SONAME" "HEADER" "DEPENDS" "" ${ARGN})
 
     set(xdaq_${name}_threads ${ARG_THREADS} PARENT_SCOPE)
     set(xdaq_${name}_header ${ARG_HEADER} PARENT_SCOPE)
     set(xdaq_${name}_depends ${ARG_DEPENDS} PARENT_SCOPE)
+    set(xdaq_${name}_nosoname ${ARG_NO_SONAME} PARENT_SCOPE)
     list(APPEND xdaq_all_libs ${name})
     set(xdaq_all_libs "${xdaq_all_libs}" PARENT_SCOPE)
 endfunction()
@@ -26,35 +27,42 @@ endfunction()
 # List all supported libs and their dependencies
 _xdaq_library(asyncresolv HEADER "asyncresolv/config.h")
 _xdaq_library(cgicc HEADER "cgicc/Cgicc.h")
-_xdaq_library(config HEADER "config/PackageInfo.h" DEPENDS xcept)
-_xdaq_library(i2o HEADER "i2o/version.h" DEPENDS config toolbox xcept)
+_xdaq_library(config HEADER "config/PackageInfo.h" DEPENDS xcept NO_SONAME)
+_xdaq_library(i2o HEADER "i2o/version.h" DEPENDS config toolbox xcept NO_SONAME)
 _xdaq_library(log4cplus HEADER "log4cplus/config.hxx")
 _xdaq_library(logudpappender HEADER "log4cplus/log4judpappender.h"
-                             DEPENDS config log4cplus)
+                             DEPENDS config log4cplus NO_SONAME)
 _xdaq_library(logxmlappender HEADER "log/xmlappender/version.h"
-                             DEPENDS config log4cplus)
+                             DEPENDS config log4cplus NO_SONAME)
 _xdaq_library(mimetic HEADER "mimetic/version.h")
 _xdaq_library(occi HEADER "oci.h")
-_xdaq_library(peer HEADER "pt/version.h" DEPENDS config toolbox xcept xoap THREADS)
+_xdaq_library(peer HEADER "pt/version.h" DEPENDS config toolbox xcept xoap
+                   THREADS NO_SONAME)
 _xdaq_library(toolbox HEADER "toolbox/version.h"
-                      DEPENDS asyncresolv cgicc log4cplus THREADS)
-_xdaq_library(tstoreclient HEADER "tstore/client/version.h")
-_xdaq_library(tstoreutils HEADER "tstore/utils/version.h" DEPENDS occi)
+                      DEPENDS asyncresolv cgicc log4cplus THREADS NO_SONAME)
+_xdaq_library(tstoreclient HEADER "tstore/client/version.h" NO_SONAME)
+_xdaq_library(tstoreutils HEADER "tstore/utils/version.h" DEPENDS occi NO_SONAME)
 _xdaq_library(tstore HEADER "tstore/version.h"
-                     DEPENDS tstoreclient tstoreutils xalan-c)
+                     DEPENDS tstoreclient tstoreutils xalan-c
+                     NO_SONAME)
 _xdaq_library(xalan-c HEADER "xalanc/Include/XalanVersion.hpp")
-_xdaq_library(xcept HEADER "xcept/version.h" DEPENDS config toolbox)
+_xdaq_library(xcept HEADER "xcept/version.h" DEPENDS config toolbox NO_SONAME)
 _xdaq_library(xdata HEADER "xdata/version.h"
-                    DEPENDS config mimetic toolbox xcept xerces-c xoap THREADS)
+                    DEPENDS config mimetic toolbox xcept xerces-c xoap THREADS
+                    NO_SONAME)
 _xdaq_library(xdaq HEADER "xdaq/version.h"
                    DEPENDS config log4cplus logudpappender logxmlappender peer
-                           toolbox xcept xdata xerces-c xgi xoap)
+                           toolbox xcept xdata xerces-c xgi xoap
+                   NO_SONAME)
 _xdaq_library(xdaq2rc HEADER "xdaq2rc/version.h"
-                      DEPENDS config log4cplus toolbox xdaq xdata xerces-c xoap THREADS)
+                      DEPENDS config log4cplus toolbox xdaq xdata xerces-c xoap
+                      THREADS NO_SONAME)
 _xdaq_library(xerces-c HEADER "xercesc/util/XercesVersion.hpp")
 _xdaq_library(xgi HEADER "xgi/version.h"
-                  DEPENDS cgicc config toolbox xcept xerces-c THREADS)
-_xdaq_library(xoap HEADER "xoap/version.h" DEPENDS config toolbox xcept xerces-c)
+                  DEPENDS cgicc config toolbox xcept xerces-c THREADS NO_SONAME)
+_xdaq_library(xoap HEADER "xoap/version.h"
+                   DEPENDS config toolbox xcept xerces-c
+                   NO_SONAME)
 
 # If the list of libs isn't specified, assume all of them are needed
 if(NOT xDAQ_FIND_COMPONENTS)
@@ -160,6 +168,11 @@ function(_xdaq_import_lib name)
         PROPERTY IMPORTED_LOCATION
         ${xDAQ_${uname}_LIBRARY})
 
+    # Handle NO_SONAME
+    if(xdaq_${name}_nosoname)
+        set_property(TARGET xDAQ::${name} PROPERTY IMPORTED_NO_SONAME TRUE)
+    endif()
+
     # Set include path
     set_property(
         TARGET xDAQ::${name}
@@ -251,6 +264,7 @@ foreach(lib ${xdaq_all_libs})
     unset(xdaq_${name}_threads)
     unset(xdaq_${name}_header)
     unset(xdaq_${name}_depends)
+    unset(xdaq_${name}_nosoname)
 endforeach()
 
 unset(xdaq_need_threads)
