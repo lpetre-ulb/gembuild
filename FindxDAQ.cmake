@@ -194,22 +194,13 @@ macro(_xdaq_import_lib name)
                     endif()
 
                     # Set include path
-                    set_property(
-                        TARGET xDAQ::${name}
-                        APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES
-                        ${xDAQ_${uname}_INCLUDE_DIR})
-                    set_property(
-                        TARGET xDAQ::${name}
-                        APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
-                        ${xDAQ_${uname}_INCLUDE_DIR})
-                    set_property(
-                        TARGET xDAQ::${name}
-                        APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES
-                        ${xDAQ_${uname}_INCLUDE_DIR}/linux)
-                    set_property(
-                        TARGET xDAQ::${name}
-                        APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
-                        ${xDAQ_${uname}_INCLUDE_DIR}/linux)
+                    set_target_properties(
+                        xDAQ::${name}
+                        PROPERTIES
+                        INTERFACE_INCLUDE_DIRECTORIES
+                        "${xDAQ_${uname}_INCLUDE_DIR};${xDAQ_${uname}_INCLUDE_DIR}/linux"
+                        INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+                        "${xDAQ_${uname}_INCLUDE_DIR};${xDAQ_${uname}_INCLUDE_DIR}/linux")
 
                     # Dependencies aren't written into .so as they should be, so we need to
                     # link explicitely
