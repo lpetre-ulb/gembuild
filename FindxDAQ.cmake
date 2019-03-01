@@ -255,30 +255,26 @@ foreach(lib ${xdaq_required_libs})
 endforeach()
 
 # i2o requires an additional definition
-list(FIND xdaq_required_libs i2o found)
-if(NOT found EQUAL -1)
+if(xDAQ_I2O_FOUND)
     set_property(TARGET xDAQ::i2o
                  APPEND PROPERTY INTERFACE_COMPILE_DEFINITIONS
                  LITTLE_ENDIAN__)
 endif()
-unset(found)
 
 # toolbox requires libuuid from the system
-list(FIND xdaq_required_libs toolbox found)
-if(NOT found EQUAL -1)
-    find_library(xdaq_uuid_library uuid)
-    mark_as_advanced(xdaq_uuid_library)
+if(xDAQ_TOOLBOX_FOUND)
+    find_library(xDAQ_UUID_LIBRARY uuid)
+    mark_as_advanced(xDAQ_UUID_LIBRARY)
 
     # Maybe we shouldn't fail if not REQUIRED...
-    if(NOT xdaq_uuid_library)
+    if(NOT xDAQ_UUID_LIBRARY)
         message(SEND_ERROR "Could not find libuuid, required by xDAQ library toolbox")
         set(xDAQ_FOUND FALSE)
     endif()
     set_property(TARGET xDAQ::toolbox
                  APPEND PROPERTY INTERFACE_LINK_LIBRARIES
-                 ${xdaq_uuid_library})
+                 ${xDAQ_UUID_LIBRARY})
 endif()
-unset(found)
 
 # Cleanup
 foreach(lib ${xdaq_all_libs})
