@@ -288,7 +288,7 @@ if(TARGET xDAQ::i2o)
 endif()
 
 # toolbox requires libuuid from the system
-# It is guaranteed that XDAQ_TOOLBOX_FOUND is FALSE when libuuid is not found
+# It is guaranteed that xDAQ_toolbox_FOUND is FALSE when libuuid is not found
 if(xDAQ_toolbox_FOUND)
     set_property(TARGET xDAQ::toolbox
                  APPEND PROPERTY INTERFACE_LINK_LIBRARIES
