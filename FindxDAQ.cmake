@@ -63,6 +63,24 @@ _xdaq_library(xoap HEADER "xoap/version.h"
                    DEPENDS config toolbox xcept xerces-c
                    NO_SONAME)
 
+# Build recursive dep lists
+macro(_xdaq_build_recursive_depends lib)
+    if(NOT DEFINED xdaq_${lib}_recursive_depends) # Prevent infinite recursion
+        set(xdaq_${lib}_recursive_depends "${xdaq_${lib}_depends}")
+        foreach(dep ${xdaq_${lib}_depends})
+            _xdaq_build_recursive_depends(${dep})
+            foreach(recdep ${xdaq_${dep}_recursive_depends})
+                list(APPEND xdaq_${lib}_recursive_depends ${recdep})
+            endforeach()
+        endforeach()
+        list(REMOVE_DUPLICATES xdaq_${lib}_recursive_depends)
+    endif()
+endmacro()
+
+foreach(lib ${xdaq_all_libs})
+    _xdaq_build_recursive_depends(${lib})
+endforeach()
+
 # If the list of libs isn't specified, assume all of them are needed
 if(NOT DEFINED xDAQ_FIND_COMPONENTS)
     set(xDAQ_FIND_COMPONENTS "${xdaq_all_libs}")
@@ -93,30 +111,27 @@ foreach(lib ${xDAQ_FIND_COMPONENTS})
     unset(found)
 endforeach()
 
-# Check for threading libraries only if required
-set(xdaq_need_threads FALSE)
+# Turn the recursive list of dependencies into a list of required variables
+foreach(lib ${xDAQ_FIND_COMPONENTS})
+    set(xdaq_${lib}_required_variables xDAQ_${lib}_LIBRARY xDAQ_${lib}_INCLUDE_DIR)
+    foreach(dep ${xdaq_${lib}_recursive_depends})
+        list(APPEND xdaq_${lib}_required_variables
+             xDAQ_${dep}_LIBRARY xDAQ_${dep}_INCLUDE_DIR)
+    endforeach()
+endforeach()
 
-# Checks whether threads are needed for a given lib
-macro(_xdaq_check_threads name)
-    if(xdaq_${name}_threads)
-        # Check this lib
-        set(xdaq_need_threads TRUE)
-    elseif(NOT xdaq_${name}_searching)
-        # Prevent infinite recursion
-        set(xdaq_${name}_searching TRUE)
-
-        # Check dependencies
-        foreach(dep ${xdaq_${name}_depends})
-            _xdaq_check_threads(${dep})
-        endforeach()
-
-        unset(xdaq_${name}_searching)
-    endif()
-endmacro()
+# Build the list of all required libraries with dependencies included
+set(xdaq_requested_libs ${xDAQ_FIND_COMPONENTS})
+foreach(lib ${xDAQ_FIND_COMPONENTS})
+    list(APPEND xdaq_requested_libs ${xdaq_${lib}_recursive_depends})
+endforeach()
+list(REMOVE_DUPLICATES xdaq_requested_libs)
 
 # Are threads required?
-foreach(lib ${xDAQ_FIND_COMPONENTS})
-    _xdaq_check_threads(${lib})
+foreach(lib ${xdaq_requested_libs})
+    if(xdaq_${lib}_threads)
+        set(xdaq_need_threads TRUE)
+    endif()
 endforeach()
 
 # Find threads
@@ -258,15 +273,13 @@ set(xDAQ_LIBRARIES "")
 set(xDAQ_INCLUDE_DIRS "")
 
 foreach(lib ${xDAQ_FIND_COMPONENTS})
-    if(xDAQ_${lib}_FOUND)
-        find_package_handle_standard_args(
-            xDAQ_${lib}
-            FOUND_VAR xDAQ_${lib}_FOUND
-            REQUIRED_VARS xDAQ_${lib}_LIBRARY xDAQ_${lib}_INCLUDE_DIR)
+    find_package_handle_standard_args(
+        xDAQ_${lib}
+        FOUND_VAR xDAQ_${lib}_FOUND
+        REQUIRED_VARS ${xdaq_${lib}_required_variables})
 
-        list(APPEND xDAQ_LIBRARIES ${xDAQ_${lib}_LIBRARY})
-        list(APPEND xDAQ_INCLUDE_DIRS ${xDAQ_${lib}_INCLUDE_DIR})
-    endif()
+    list(APPEND xDAQ_LIBRARIES ${xDAQ_${lib}_LIBRARY})
+    list(APPEND xDAQ_INCLUDE_DIRS ${xDAQ_${lib}_INCLUDE_DIR})
 endforeach()
 
 list(REMOVE_DUPLICATES xDAQ_LIBRARIES)
@@ -295,12 +308,15 @@ if(xDAQ_toolbox_FOUND)
 endif()
 
 # Cleanup
-foreach(lib ${xdaq_all_libs})
+foreach(name ${xdaq_all_libs})
     unset(xdaq_${name}_threads)
     unset(xdaq_${name}_header)
     unset(xdaq_${name}_depends)
     unset(xdaq_${name}_nosoname)
+    unset(xdaq_${name}_recursive_depends)
+    unset(xdaq_${name}_required_variables)
 endforeach()
 
 unset(xdaq_need_threads)
 unset(xdaq_all_libs)
+unset(xdaq_requested_libs)
