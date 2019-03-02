@@ -87,11 +87,6 @@ if(NOT DEFINED xDAQ_FIND_COMPONENTS)
     set(xDAQ_FIND_COMPONENTS "${xdaq_all_libs}")
 endif()
 
-# Version numbers are not supported
-if(xDAQ_FIND_VERSION)
-    message(WARNING "xDAQ version ${xDAQ_FIND_VERSION} was requested, but version checking is not supported")
-endif()
-
 # Check that all requested libs are known
 foreach(lib ${xDAQ_FIND_COMPONENTS})
     list(FIND xdaq_all_libs ${lib} found)
@@ -263,6 +258,28 @@ if(TARGET xDAQ::toolbox)
     set_property(TARGET xDAQ::toolbox
                  APPEND PROPERTY INTERFACE_LINK_LIBRARIES
                  ${xDAQ_uuid_LIBRARY})
+endif()
+
+# Extract version information
+if(xDAQ_INCLUDE_DIRS AND EXISTS "${xDAQ_INCLUDE_DIR}/xcept/version.h")
+    # xcept seems to be fundamental in xDAQ, so we assume it should always be
+    # present. xDAQ would be quite useless otherwise.
+    file(STRINGS "${xDAQ_INCLUDE_DIR}/xcept/version.h"
+         version_h_contents REGEX "#define XCEPT_VERSION_")
+
+    foreach(line ${version_h_contents})
+        if("${line}" MATCHES "#define XCEPT_VERSION_MAJOR ([0-9])+")
+            set(xDAQ_VERSION_MAJOR ${CMAKE_MATCH_1})
+        elseif("${line}" MATCHES "#define XCEPT_VERSION_MINOR ([0-9])+")
+            set(xDAQ_VERSION_MINOR ${CMAKE_MATCH_1})
+        elseif("${line}" MATCHES "#define XCEPT_VERSION_PATCH ([0-9])+")
+            set(xDAQ_VERSION_PATCH ${CMAKE_MATCH_1})
+        endif()
+    endforeach()
+
+    set(xDAQ_VERSION ${xDAQ_VERSION_MAJOR}.${xDAQ_VERSION_MINOR}.${xDAQ_VERSION_PATCH})
+
+    unset(version_h_contents)
 endif()
 
 # Wrap things up
