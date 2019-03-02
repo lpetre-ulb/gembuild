@@ -134,6 +134,11 @@ macro(_xdaq_import_lib name)
             endif()
         endforeach()
 
+        # Threads dependency
+        if(xdaq_${name}_threads AND NOT Threads_FOUND)
+            set(xdaq_${name}_deps_found FALSE)
+        endif()
+
         if(xdaq_${name}_deps_found)
             # May have been overwritten
             string(TOUPPER ${name} uname)
