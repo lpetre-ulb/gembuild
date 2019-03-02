@@ -121,10 +121,9 @@ list(REMOVE_DUPLICATES xdaq_requested_libs)
 
 # Turn the recursive list of dependencies into a list of required variables
 foreach(lib ${xDAQ_FIND_COMPONENTS})
-    set(xdaq_${lib}_required_variables xDAQ_${lib}_LIBRARY xDAQ_${lib}_INCLUDE_DIR)
+    set(xdaq_${lib}_required_variables xDAQ_${lib}_LIBRARY xDAQ_INCLUDE_DIRS)
     foreach(dep ${xdaq_${lib}_recursive_depends})
-        list(APPEND xdaq_${lib}_required_variables
-             xDAQ_${dep}_LIBRARY xDAQ_${dep}_INCLUDE_DIR)
+        list(APPEND xdaq_${lib}_required_variables xDAQ_${dep}_LIBRARY)
 
         # Threads
         if(xdaq_${dep}_threads)
@@ -189,7 +188,7 @@ macro(_xdaq_import_lib name)
 
         # Try to find the headers
         find_path(
-            xDAQ_${name}_INCLUDE_DIR
+            xDAQ_INCLUDE_DIRS
             ${xdaq_${name}_header}
             NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH
             HINTS ENV XDAQ_ROOT
@@ -197,9 +196,9 @@ macro(_xdaq_import_lib name)
             PATH_SUFFIXES include
             DOC "Root directory of the xDAQ installation")
 
-        mark_as_advanced(xDAQ_${name}_INCLUDE_DIR)
+        mark_as_advanced(xDAQ_INCLUDE_DIRS)
 
-        if(xDAQ_${name}_LIBRARY AND xDAQ_${name}_INCLUDE_DIR)
+        if(xDAQ_${name}_LIBRARY AND xDAQ_INCLUDE_DIRS)
             # Found!
             set(xDAQ_${name}_FOUND TRUE)
 
@@ -222,9 +221,9 @@ macro(_xdaq_import_lib name)
                 xDAQ::${name}
                 PROPERTIES
                 INTERFACE_INCLUDE_DIRECTORIES
-                "${xDAQ_${name}_INCLUDE_DIR};${xDAQ_${name}_INCLUDE_DIR}/linux"
+                "${xDAQ_INCLUDE_DIRS};${xDAQ_INCLUDE_DIRS}/linux"
                 INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
-                "${xDAQ_${name}_INCLUDE_DIR};${xDAQ_${name}_INCLUDE_DIR}/linux")
+                "${xDAQ_INCLUDE_DIRS};${xDAQ_INCLUDE_DIRS}/linux")
 
             # Dependencies aren't written into .so as they should be, so we need to
             # link explicitely
@@ -268,7 +267,6 @@ endif()
 
 # Wrap things up
 set(xDAQ_LIBRARIES "")
-set(xDAQ_INCLUDE_DIRS "")
 
 foreach(lib ${xDAQ_FIND_COMPONENTS})
     find_package_handle_standard_args(
@@ -277,16 +275,14 @@ foreach(lib ${xDAQ_FIND_COMPONENTS})
         REQUIRED_VARS ${xdaq_${lib}_required_variables})
 
     list(APPEND xDAQ_LIBRARIES ${xDAQ_${lib}_LIBRARY})
-    list(APPEND xDAQ_INCLUDE_DIRS ${xDAQ_${lib}_INCLUDE_DIR})
 endforeach()
 
 list(REMOVE_DUPLICATES xDAQ_LIBRARIES)
-list(REMOVE_DUPLICATES xDAQ_INCLUDE_DIRS)
 
 find_package_handle_standard_args(
     xDAQ
     FOUND_VAR xDAQ_FOUND
-    REQUIRED_VARS xDAQ_LIBRARIES xDAQ_INCLUDE_DIRS
+    REQUIRED_VARS xDAQ_INCLUDE_DIRS xDAQ_LIBRARIES
     VERSION_VAR xDAQ_VERSION
     HANDLE_COMPONENTS)
 
