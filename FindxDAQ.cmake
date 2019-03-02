@@ -64,7 +64,7 @@ _xdaq_library(xoap HEADER "xoap/version.h"
                    NO_SONAME)
 
 # If the list of libs isn't specified, assume all of them are needed
-if(NOT xDAQ_FIND_COMPONENTS)
+if(NOT DEFINED xDAQ_FIND_COMPONENTS)
     set(xDAQ_FIND_COMPONENTS "${xdaq_all_libs}")
 endif()
 
@@ -81,7 +81,7 @@ foreach(lib ${xDAQ_FIND_COMPONENTS})
             message(SEND_ERROR "Unknown xDAQ library ${lib} was requested. This is probably due to a programming error.")
         endif()
         set(xDAQ_FOUND FALSE)
-        set(xDAQ_${ulib}_FOUND FALSE)
+        set(xDAQ_${lib}_FOUND FALSE)
         message("a false")
         list(REMOVE_ITEM xDAQ_FIND_COMPONENTS ${lib})
     endif()
@@ -125,8 +125,7 @@ macro(_xdaq_import_lib name)
     if(NOT TARGET xDAQ::${name})
 
         # We haven't found anything yet
-        string(TOUPPER ${name} uname)
-        set(xDAQ_${uname}_FOUND FALSE)
+        set(xDAQ_${name}_FOUND FALSE)
         set(xdaq_${name}_deps_found TRUE)
         set(xdaq_${name}_searching TRUE)
 
@@ -135,13 +134,10 @@ macro(_xdaq_import_lib name)
             if(NOT xdaq_${dep}_searching) # Prevent infinite recursion
                 _xdaq_import_lib(${dep})
 
-                string(TOUPPER ${dep} udep)
-                if(NOT xDAQ_${udep}_FOUND)
-                    string(TOUPPER ${name} uname) # May have been overwritten
+                if(NOT xDAQ_${dep}_FOUND)
                     set(xdaq_${name}_deps_found FALSE)
                     set(xDAQ_FOUND FALSE)
                 endif()
-                unset(udep)
             endif()
         endforeach()
 
@@ -153,22 +149,19 @@ macro(_xdaq_import_lib name)
 
         # toolbox requires libuuid from the system
         if(${name} STREQUAL "toolbox")
-            find_library(xDAQ_UUID_LIBRARY uuid)
-            mark_as_advanced(xDAQ_UUID_LIBRARY)
+            find_library(xDAQ_uuid_LIBRARY uuid)
+            mark_as_advanced(xDAQ_uuid_LIBRARY)
 
-            if(NOT xDAQ_UUID_LIBRARY)
+            if(NOT xDAQ_uuid_LIBRARY)
                 set(xDAQ_FOUND FALSE)
                 set(xdaq_toolbox_deps_found FALSE)
             endif()
         endif()
 
         if(xdaq_${name}_deps_found)
-            # May have been overwritten
-            string(TOUPPER ${name} uname)
-
             # Try to find the library
             find_library(
-                xDAQ_${uname}_LIBRARY
+                xDAQ_${name}_LIBRARY
                 ${name}
                 NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH
                 HINTS ENV XDAQ_ROOT
@@ -176,9 +169,9 @@ macro(_xdaq_import_lib name)
                 PATH_SUFFIXES lib lib64
                 DOC "Root directory of the xDAQ installation")
 
-            mark_as_advanced(xDAQ_${uname}_LIBRARY)
+            mark_as_advanced(xDAQ_${name}_LIBRARY)
 
-            if(NOT xDAQ_${uname}_LIBRARY)
+            if(NOT xDAQ_${name}_LIBRARY)
                 set(xDAQ_FOUND FALSE)
                 if(xDAQ_FIND_REQUIRED)
                     message(SEND_ERROR
@@ -187,7 +180,7 @@ macro(_xdaq_import_lib name)
             else()
                 # Try to find the headers
                 find_path(
-                    xDAQ_${uname}_INCLUDE_DIR
+                    xDAQ_${name}_INCLUDE_DIR
                     ${xdaq_${name}_header}
                     NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH
                     HINTS ENV XDAQ_ROOT
@@ -195,9 +188,9 @@ macro(_xdaq_import_lib name)
                     PATH_SUFFIXES include
                     DOC "Root directory of the xDAQ installation")
 
-                mark_as_advanced(xDAQ_${uname}_INCLUDE_DIR)
+                mark_as_advanced(xDAQ_${name}_INCLUDE_DIR)
 
-                if(NOT xDAQ_${uname}_INCLUDE_DIR)
+                if(NOT xDAQ_${name}_INCLUDE_DIR)
                     set(xDAQ_FOUND FALSE)
                     if(xDAQ_FIND_REQUIRED)
                         message(SEND_ERROR
@@ -205,7 +198,7 @@ macro(_xdaq_import_lib name)
                     endif()
                 else()
                     # Found!
-                    set(xDAQ_${uname}_FOUND TRUE)
+                    set(xDAQ_${name}_FOUND TRUE)
 
                     # Create the target
                     add_library(xDAQ::${name} SHARED IMPORTED)
@@ -214,7 +207,7 @@ macro(_xdaq_import_lib name)
                     set_property(
                         TARGET xDAQ::${name}
                         PROPERTY IMPORTED_LOCATION
-                        ${xDAQ_${uname}_LIBRARY})
+                        ${xDAQ_${name}_LIBRARY})
 
                     # Handle NO_SONAME
                     if(xdaq_${name}_nosoname)
@@ -226,9 +219,9 @@ macro(_xdaq_import_lib name)
                         xDAQ::${name}
                         PROPERTIES
                         INTERFACE_INCLUDE_DIRECTORIES
-                        "${xDAQ_${uname}_INCLUDE_DIR};${xDAQ_${uname}_INCLUDE_DIR}/linux"
+                        "${xDAQ_${name}_INCLUDE_DIR};${xDAQ_${name}_INCLUDE_DIR}/linux"
                         INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
-                        "${xDAQ_${uname}_INCLUDE_DIR};${xDAQ_${uname}_INCLUDE_DIR}/linux")
+                        "${xDAQ_${name}_INCLUDE_DIR};${xDAQ_${name}_INCLUDE_DIR}/linux")
 
                     # Dependencies aren't written into .so as they should be, so we need to
                     # link explicitely
@@ -253,7 +246,6 @@ macro(_xdaq_import_lib name)
         # Cleanup
         unset(xdaq_${name}_deps_found)
         unset(xdaq_${name}_searching)
-        unset(uname)
 
     endif()
 endmacro()
@@ -267,34 +259,48 @@ endforeach()
 if(NOT xDAQ_FOUND)
     message(STATUS "The following xDAQ libraries are missing:")
     foreach(lib ${xDAQ_FIND_COMPONENTS})
-        string(TOUPPER ${lib} ulib)
-        if(NOT xDAQ_${ulib}_FOUND)
+        if(NOT xDAQ_${lib}_FOUND)
             message(STATUS "  ${lib}")
         endif()
     endforeach()
 endif()
 
-message(STATUS "Found the following xDAQ libraries:")
+set(xDAQ_LIBRARIES "")
+set(xDAQ_INCLUDE_DIRS "")
+
 foreach(lib ${xDAQ_FIND_COMPONENTS})
-    string(TOUPPER ${lib} ulib)
-    if(xDAQ_${ulib}_FOUND)
-        message(STATUS "  ${lib}")
-    endif()
+    list(APPEND xDAQ_LIBRARIES ${xDAQ_${lib}_LIBRARY})
+    list(APPEND xDAQ_INCLUDE_DIRS ${xDAQ_${lib}_INCLUDE_DIR})
+
+    find_package_handle_standard_args(
+        xDAQ_${lib}
+        FOUND_VAR xDAQ_${lib}_FOUND
+        REQUIRED_VARS xDAQ_${lib}_LIBRARY xDAQ_${lib}_INCLUDE_DIR)
 endforeach()
 
+list(REMOVE_DUPLICATES xDAQ_LIBRARIES)
+list(REMOVE_DUPLICATES xDAQ_INCLUDE_DIRS)
+
+find_package_handle_standard_args(
+    xDAQ
+    FOUND_VAR xDAQ_FOUND
+    REQUIRED_VARS xDAQ_LIBRARIES xDAQ_INCLUDE_DIRS
+    VERSION_VAR xDAQ_VERSION
+    HANDLE_COMPONENTS)
+
 # i2o requires an additional definition
-if(xDAQ_I2O_FOUND)
+if(TARGET xDAQ::i2o)
     set_property(TARGET xDAQ::i2o
                  APPEND PROPERTY INTERFACE_COMPILE_DEFINITIONS
                  LITTLE_ENDIAN__)
 endif()
 
 # toolbox requires libuuid from the system
-# It is guaranteed that xDAQ_TOOLBOX_FOUND is FALSE when libuuid is not found
-if(xDAQ_TOOLBOX_FOUND)
+# It is guaranteed that XDAQ_TOOLBOX_FOUND is FALSE when libuuid is not found
+if(xDAQ_toolbox_FOUND)
     set_property(TARGET xDAQ::toolbox
                  APPEND PROPERTY INTERFACE_LINK_LIBRARIES
-                 ${xDAQ_UUID_LIBRARY})
+                 ${xDAQ_uuid_LIBRARY})
 endif()
 
 # Cleanup
