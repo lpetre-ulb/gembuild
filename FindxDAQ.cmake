@@ -75,16 +75,22 @@ endif()
 
 # Check that all requested libs are known
 foreach(lib ${xDAQ_FIND_COMPONENTS})
-    list(FIND "${xdaq_all_libs}" ${lib} found)
-    if(NOT found EQUAL -1)
-        if(xDAQ_FIND_REQUIRED)
-            message(SEND_ERROR "Unknown xDAQ library ${lib} was requested. This is probably due to a programming error.")
-        endif()
+    list(FIND xdaq_all_libs ${lib} found)
+    if(found EQUAL -1)
         set(xDAQ_FOUND FALSE)
-        set(xDAQ_${lib}_FOUND FALSE)
-        message("a false")
         list(REMOVE_ITEM xDAQ_FIND_COMPONENTS ${lib})
+
+        # Notify user
+        set(msg_type STATUS)
+        if(xDAQ_FIND_REQUIRED)
+            set(msg_type SEND_ERROR)
+        endif()
+        if(NOT xDAQ_FIND_QUIETLY)
+            message(${msg_type} "Unknown xDAQ library ${lib} was requested. This is probably due to a programming error.")
+        endif()
+        unset(msg_type)
     endif()
+    unset(found)
 endforeach()
 
 # Check for threading libraries only if required
