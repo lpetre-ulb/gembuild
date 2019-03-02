@@ -124,6 +124,13 @@ if(xdaq_need_threads)
     find_package(Threads QUIET)
 endif()
 
+# Sets xDAQ_FOUND to FALSE if the given library isn't optional
+function(_xdaq_lib_not_found lib)
+    if(NOT xDAQ_FIND_REQUIRED_${lib})
+        set(xDAQ_FOUND FALSE)
+    endif()
+endfunction()
+
 # Creates an imported target for the given lib
 macro(_xdaq_import_lib name)
 
@@ -142,7 +149,7 @@ macro(_xdaq_import_lib name)
 
                 if(NOT xDAQ_${dep}_FOUND)
                     set(xdaq_${name}_deps_found FALSE)
-                    set(xDAQ_FOUND FALSE)
+                    _xdaq_lib_not_found(${dep})
                 endif()
             endif()
         endforeach()
@@ -150,7 +157,7 @@ macro(_xdaq_import_lib name)
         # Threads dependency
         if(xdaq_${name}_threads AND NOT Threads_FOUND)
             set(xdaq_${name}_deps_found FALSE)
-            set(xDAQ_FOUND FALSE)
+            _xdaq_lib_not_found(${name})
         endif()
 
         # toolbox requires libuuid from the system
@@ -159,7 +166,7 @@ macro(_xdaq_import_lib name)
             mark_as_advanced(xDAQ_uuid_LIBRARY)
 
             if(NOT xDAQ_uuid_LIBRARY)
-                set(xDAQ_FOUND FALSE)
+                _xdaq_lib_not_found(uuid)
                 set(xdaq_toolbox_deps_found FALSE)
             endif()
         endif()
@@ -177,74 +184,60 @@ macro(_xdaq_import_lib name)
 
             mark_as_advanced(xDAQ_${name}_LIBRARY)
 
-            if(NOT xDAQ_${name}_LIBRARY)
-                set(xDAQ_FOUND FALSE)
-                if(xDAQ_FIND_REQUIRED)
-                    message(SEND_ERROR
-                            "Could not find shared object file for xDAQ library ${name}")
+            # Try to find the headers
+            find_path(
+                xDAQ_${name}_INCLUDE_DIR
+                ${xdaq_${name}_header}
+                NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH
+                HINTS ENV XDAQ_ROOT
+                PATHS /opt/xdaq/
+                PATH_SUFFIXES include
+                DOC "Root directory of the xDAQ installation")
+
+            mark_as_advanced(xDAQ_${name}_INCLUDE_DIR)
+
+            if(xDAQ_${name}_LIBRARY AND xDAQ_${name}_INCLUDE_DIR)
+                # Found!
+                set(xDAQ_${name}_FOUND TRUE)
+
+                # Create the target
+                add_library(xDAQ::${name} SHARED IMPORTED)
+
+                # Set location
+                set_property(
+                    TARGET xDAQ::${name}
+                    PROPERTY IMPORTED_LOCATION
+                    ${xDAQ_${name}_LIBRARY})
+
+                # Handle NO_SONAME
+                if(xdaq_${name}_nosoname)
+                    set_property(TARGET xDAQ::${name} PROPERTY IMPORTED_NO_SONAME TRUE)
                 endif()
-            else()
-                # Try to find the headers
-                find_path(
-                    xDAQ_${name}_INCLUDE_DIR
-                    ${xdaq_${name}_header}
-                    NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH
-                    HINTS ENV XDAQ_ROOT
-                    PATHS /opt/xdaq/
-                    PATH_SUFFIXES include
-                    DOC "Root directory of the xDAQ installation")
 
-                mark_as_advanced(xDAQ_${name}_INCLUDE_DIR)
+                # Set include path
+                set_target_properties(
+                    xDAQ::${name}
+                    PROPERTIES
+                    INTERFACE_INCLUDE_DIRECTORIES
+                    "${xDAQ_${name}_INCLUDE_DIR};${xDAQ_${name}_INCLUDE_DIR}/linux"
+                    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+                    "${xDAQ_${name}_INCLUDE_DIR};${xDAQ_${name}_INCLUDE_DIR}/linux")
 
-                if(NOT xDAQ_${name}_INCLUDE_DIR)
-                    set(xDAQ_FOUND FALSE)
-                    if(xDAQ_FIND_REQUIRED)
-                        message(SEND_ERROR
-                                "Could not find header files for xDAQ library ${name}")
-                    endif()
-                else()
-                    # Found!
-                    set(xDAQ_${name}_FOUND TRUE)
-
-                    # Create the target
-                    add_library(xDAQ::${name} SHARED IMPORTED)
-
-                    # Set location
+                # Dependencies aren't written into .so as they should be, so we need to
+                # link explicitely
+                foreach(dep ${xdaq_${name}_depends})
                     set_property(
                         TARGET xDAQ::${name}
-                        PROPERTY IMPORTED_LOCATION
-                        ${xDAQ_${name}_LIBRARY})
+                        APPEND PROPERTY INTERFACE_LINK_LIBRARIES
+                        xDAQ::${dep})
+                endforeach()
 
-                    # Handle NO_SONAME
-                    if(xdaq_${name}_nosoname)
-                        set_property(TARGET xDAQ::${name} PROPERTY IMPORTED_NO_SONAME TRUE)
-                    endif()
-
-                    # Set include path
-                    set_target_properties(
-                        xDAQ::${name}
-                        PROPERTIES
-                        INTERFACE_INCLUDE_DIRECTORIES
-                        "${xDAQ_${name}_INCLUDE_DIR};${xDAQ_${name}_INCLUDE_DIR}/linux"
-                        INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
-                        "${xDAQ_${name}_INCLUDE_DIR};${xDAQ_${name}_INCLUDE_DIR}/linux")
-
-                    # Dependencies aren't written into .so as they should be, so we need to
-                    # link explicitely
-                    foreach(dep ${xdaq_${name}_depends})
-                        set_property(
-                            TARGET xDAQ::${name}
-                            APPEND PROPERTY INTERFACE_LINK_LIBRARIES
-                            xDAQ::${dep})
-                    endforeach()
-
-                    # Some libs need threading support
-                    if(${xdaq_${name}_threads})
-                        set_property(
-                            TARGET xDAQ::${name}
-                            APPEND PROPERTY INTERFACE_LINK_LIBRARIES
-                            ${CMAKE_THREAD_LIBS_INIT})
-                    endif()
+                # Some libs need threading support
+                if(${xdaq_${name}_threads})
+                    set_property(
+                        TARGET xDAQ::${name}
+                        APPEND PROPERTY INTERFACE_LINK_LIBRARIES
+                        ${CMAKE_THREAD_LIBS_INIT})
                 endif()
             endif()
         endif()
@@ -261,27 +254,20 @@ foreach(lib IN LISTS xDAQ_FIND_COMPONENTS)
     _xdaq_import_lib(${lib})
 endforeach()
 
-# Print some debug info
-if(NOT xDAQ_FOUND)
-    message(STATUS "The following xDAQ libraries are missing:")
-    foreach(lib ${xDAQ_FIND_COMPONENTS})
-        if(NOT xDAQ_${lib}_FOUND)
-            message(STATUS "  ${lib}")
-        endif()
-    endforeach()
-endif()
-
+# Wrap things up
 set(xDAQ_LIBRARIES "")
 set(xDAQ_INCLUDE_DIRS "")
 
 foreach(lib ${xDAQ_FIND_COMPONENTS})
-    list(APPEND xDAQ_LIBRARIES ${xDAQ_${lib}_LIBRARY})
-    list(APPEND xDAQ_INCLUDE_DIRS ${xDAQ_${lib}_INCLUDE_DIR})
-
     find_package_handle_standard_args(
         xDAQ_${lib}
         FOUND_VAR xDAQ_${lib}_FOUND
         REQUIRED_VARS xDAQ_${lib}_LIBRARY xDAQ_${lib}_INCLUDE_DIR)
+
+    if(xDAQ_${lib}_FOUND)
+        list(APPEND xDAQ_LIBRARIES ${xDAQ_${lib}_LIBRARY})
+        list(APPEND xDAQ_INCLUDE_DIRS ${xDAQ_${lib}_INCLUDE_DIR})
+    endif()
 endforeach()
 
 list(REMOVE_DUPLICATES xDAQ_LIBRARIES)
