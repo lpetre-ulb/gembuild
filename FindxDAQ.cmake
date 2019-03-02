@@ -148,6 +148,18 @@ macro(_xdaq_import_lib name)
         # Threads dependency
         if(xdaq_${name}_threads AND NOT Threads_FOUND)
             set(xdaq_${name}_deps_found FALSE)
+            set(xDAQ_FOUND FALSE)
+        endif()
+
+        # toolbox requires libuuid from the system
+        if(${name} STREQUAL "toolbox")
+            find_library(xDAQ_UUID_LIBRARY uuid)
+            mark_as_advanced(xDAQ_UUID_LIBRARY)
+
+            if(NOT xDAQ_UUID_LIBRARY)
+                set(xDAQ_FOUND FALSE)
+                set(xdaq_toolbox_deps_found FALSE)
+            endif()
         endif()
 
         if(xdaq_${name}_deps_found)
@@ -278,15 +290,8 @@ if(xDAQ_I2O_FOUND)
 endif()
 
 # toolbox requires libuuid from the system
+# It is guaranteed that xDAQ_TOOLBOX_FOUND is FALSE when libuuid is not found
 if(xDAQ_TOOLBOX_FOUND)
-    find_library(xDAQ_UUID_LIBRARY uuid)
-    mark_as_advanced(xDAQ_UUID_LIBRARY)
-
-    # Maybe we shouldn't fail if not REQUIRED...
-    if(NOT xDAQ_UUID_LIBRARY)
-        message(SEND_ERROR "Could not find libuuid, required by xDAQ library toolbox")
-        set(xDAQ_FOUND FALSE)
-    endif()
     set_property(TARGET xDAQ::toolbox
                  APPEND PROPERTY INTERFACE_LINK_LIBRARIES
                  ${xDAQ_UUID_LIBRARY})
