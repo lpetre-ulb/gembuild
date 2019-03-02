@@ -90,19 +90,30 @@ endforeach()
 # Check for threading libraries only if required
 set(xdaq_need_threads FALSE)
 
-# Add dependencies to the list of libs
-set(xdaq_required_libs "")
-foreach(lib ${xDAQ_FIND_COMPONENTS})
-    list(APPEND xdaq_required_libs ${lib})
-    list(APPEND xdaq_required_libs ${xdaq_${lib}_depends})
-
+# Checks whether threads are needed for a given lib
+macro(_xdaq_check_threads name)
     if(xdaq_${name}_threads)
+        # Check this lib
         set(xdaq_need_threads TRUE)
-    endif()
-endforeach()
-list(REMOVE_DUPLICATES xdaq_required_libs)
+    elseif(NOT xdaq_${name}_searching)
+        # Prevent infinite recursion
+        set(xdaq_${name}_searching TRUE)
 
-# Threads
+        # Check dependencies
+        foreach(dep ${xdaq_${name}_depends})
+            _xdaq_check_threads(${dep})
+        endforeach()
+
+        unset(xdaq_${name}_searching)
+    endif()
+endmacro()
+
+# Are threads required?
+foreach(lib ${xDAQ_FIND_COMPONENTS})
+    _xdaq_check_threads(${lib})
+endforeach()
+
+# Find threads
 if(xdaq_need_threads)
     find_package(Threads QUIET)
 endif()
@@ -236,14 +247,14 @@ macro(_xdaq_import_lib name)
 endmacro()
 
 # Import all libs
-foreach(lib IN LISTS xdaq_required_libs)
+foreach(lib IN LISTS xDAQ_FIND_COMPONENTS)
     _xdaq_import_lib(${lib})
 endforeach()
 
 # Print some debug info
 if(NOT xDAQ_FOUND)
     message(STATUS "The following xDAQ libraries are missing:")
-    foreach(lib ${xdaq_required_libs})
+    foreach(lib ${xDAQ_FIND_COMPONENTS})
         string(TOUPPER ${lib} ulib)
         if(NOT xDAQ_${ulib}_FOUND)
             message(STATUS "  ${lib}")
@@ -252,7 +263,7 @@ if(NOT xDAQ_FOUND)
 endif()
 
 message(STATUS "Found the following xDAQ libraries:")
-foreach(lib ${xdaq_required_libs})
+foreach(lib ${xDAQ_FIND_COMPONENTS})
     string(TOUPPER ${lib} ulib)
     if(xDAQ_${ulib}_FOUND)
         message(STATUS "  ${lib}")
@@ -291,4 +302,3 @@ endforeach()
 
 unset(xdaq_need_threads)
 unset(xdaq_all_libs)
-unset(xdaq_required_libs)
