@@ -5,6 +5,7 @@
 # Finds xDAQ include directory and libraries
 
 include(CMakeParseArguments)
+include(FindPackageHandleStandardArgs)
 
 # Exported variables
 set(xDAQ_FOUND TRUE)
@@ -111,21 +112,43 @@ foreach(lib ${xDAQ_FIND_COMPONENTS})
     unset(found)
 endforeach()
 
+# Build a list of all requested libraries with dependencies included
+set(xdaq_requested_libs ${xDAQ_FIND_COMPONENTS})
+foreach(lib ${xDAQ_FIND_COMPONENTS})
+    list(APPEND xdaq_requested_libs ${xdaq_${lib}_recursive_depends})
+endforeach()
+list(REMOVE_DUPLICATES xdaq_requested_libs)
+
 # Turn the recursive list of dependencies into a list of required variables
 foreach(lib ${xDAQ_FIND_COMPONENTS})
     set(xdaq_${lib}_required_variables xDAQ_${lib}_LIBRARY xDAQ_${lib}_INCLUDE_DIR)
     foreach(dep ${xdaq_${lib}_recursive_depends})
         list(APPEND xdaq_${lib}_required_variables
              xDAQ_${dep}_LIBRARY xDAQ_${dep}_INCLUDE_DIR)
-    endforeach()
-endforeach()
 
-# Build the list of all required libraries with dependencies included
-set(xdaq_requested_libs ${xDAQ_FIND_COMPONENTS})
-foreach(lib ${xDAQ_FIND_COMPONENTS})
-    list(APPEND xdaq_requested_libs ${xdaq_${lib}_recursive_depends})
+        # Threads
+        if(xdaq_${dep}_threads)
+            list(APPEND xdaq_${lib}_required_variables CMAKE_THREAD_LIBS_INIT)
+        endif()
+
+        # Toolbox requires libuuid from the system
+        if(${dep} STREQUAL "toolbox")
+            list(APPEND xdaq_${lib}_required_variables xDAQ_uuid_LIBRARY)
+        endif()
+    endforeach()
+
+    # Threads
+    if(xdaq_${lib}_threads)
+        list(APPEND xdaq_${lib}_required_variables CMAKE_THREAD_LIBS_INIT)
+    endif()
+
+    # Toolbox requires libuuid from the system
+    if(${lib} STREQUAL "toolbox")
+        list(APPEND xdaq_${lib}_required_variables xDAQ_uuid_LIBRARY)
+    endif()
+
+    list(REMOVE_DUPLICATES xdaq_${lib}_required_variables)
 endforeach()
-list(REMOVE_DUPLICATES xdaq_requested_libs)
 
 # Are threads required?
 foreach(lib ${xdaq_requested_libs})
@@ -149,42 +172,8 @@ endfunction()
 # Creates an imported target for the given lib
 macro(_xdaq_import_lib name)
 
-    # Do nothing if already found or being looked after
+    # Do nothing if already found
     if(NOT TARGET xDAQ::${name})
-
-        # We haven't found anything yet
-        set(xDAQ_${name}_FOUND FALSE)
-        set(xdaq_${name}_deps_found TRUE)
-        set(xdaq_${name}_searching TRUE)
-
-        # Try to find dependencies
-        foreach(dep ${xdaq_${name}_depends})
-            if(NOT xdaq_${dep}_searching) # Prevent infinite recursion
-                _xdaq_import_lib(${dep})
-
-                if(NOT xDAQ_${dep}_FOUND)
-                    set(xdaq_${name}_deps_found FALSE)
-                    _xdaq_lib_not_found(${dep})
-                endif()
-            endif()
-        endforeach()
-
-        # Threads dependency
-        if(xdaq_${name}_threads AND NOT Threads_FOUND)
-            set(xdaq_${name}_deps_found FALSE)
-            _xdaq_lib_not_found(${name})
-        endif()
-
-        # toolbox requires libuuid from the system
-        if(${name} STREQUAL "toolbox")
-            find_library(xDAQ_uuid_LIBRARY uuid)
-            mark_as_advanced(xDAQ_uuid_LIBRARY)
-
-            if(NOT xDAQ_uuid_LIBRARY)
-                _xdaq_lib_not_found(uuid)
-                set(xdaq_toolbox_deps_found FALSE)
-            endif()
-        endif()
 
         # Try to find the library
         find_library(
@@ -210,8 +199,7 @@ macro(_xdaq_import_lib name)
 
         mark_as_advanced(xDAQ_${name}_INCLUDE_DIR)
 
-        if(xdaq_${name}_deps_found AND xDAQ_${name}_LIBRARY
-                                   AND xDAQ_${name}_INCLUDE_DIR)
+        if(xDAQ_${name}_LIBRARY AND xDAQ_${name}_INCLUDE_DIR)
             # Found!
             set(xDAQ_${name}_FOUND TRUE)
 
@@ -264,9 +252,19 @@ macro(_xdaq_import_lib name)
 endmacro()
 
 # Import all libs
-foreach(lib IN LISTS xDAQ_FIND_COMPONENTS)
+foreach(lib ${xdaq_requested_libs})
     _xdaq_import_lib(${lib})
 endforeach()
+
+# toolbox requires libuuid from the system
+if(TARGET xDAQ::toolbox)
+    find_library(xDAQ_uuid_LIBRARY uuid)
+    mark_as_advanced(xDAQ_uuid_LIBRARY)
+
+    set_property(TARGET xDAQ::toolbox
+                 APPEND PROPERTY INTERFACE_LINK_LIBRARIES
+                 ${xDAQ_uuid_LIBRARY})
+endif()
 
 # Wrap things up
 set(xDAQ_LIBRARIES "")
@@ -297,14 +295,6 @@ if(TARGET xDAQ::i2o)
     set_property(TARGET xDAQ::i2o
                  APPEND PROPERTY INTERFACE_COMPILE_DEFINITIONS
                  LITTLE_ENDIAN__)
-endif()
-
-# toolbox requires libuuid from the system
-# It is guaranteed that xDAQ_toolbox_FOUND is FALSE when libuuid is not found
-if(xDAQ_toolbox_FOUND)
-    set_property(TARGET xDAQ::toolbox
-                 APPEND PROPERTY INTERFACE_LINK_LIBRARIES
-                 ${xDAQ_uuid_LIBRARY})
 endif()
 
 # Cleanup
