@@ -1,5 +1,5 @@
 CFLAGS= -fomit-frame-pointer -pipe -fno-common -fno-builtin \
-	-Wall \
+	-Wall -std=c++14 \
 	-march=armv7-a -mfpu=neon -mfloat-abi=hard \
 	-mthumb-interwork -mtune=cortex-a9 \
 	-DEMBED -Dlinux -D__linux__ -Dunix -fPIC \
