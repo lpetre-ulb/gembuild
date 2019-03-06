@@ -15,7 +15,7 @@ set(xdaq_all_libs "")
 
 # Declares a library that can be required using the COMPONENTS argument
 macro(_xdaq_library name)
-    cmake_parse_arguments(ARG "THREADS;NO_SONAME" "HEADER" "DEPENDS" "" ${ARGN})
+    cmake_parse_arguments(ARG "THREADS;NO_SONAME" "HEADER" "DEPENDS" ${ARGN})
 
     set(xdaq_${name}_threads ${ARG_THREADS})
     set(xdaq_${name}_header ${ARG_HEADER})
