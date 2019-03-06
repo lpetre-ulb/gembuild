@@ -237,11 +237,6 @@ macro(_xdaq_import_lib name)
                     ${CMAKE_THREAD_LIBS_INIT})
             endif()
         endif()
-
-        # Cleanup
-        unset(xdaq_${name}_deps_found)
-        unset(xdaq_${name}_searching)
-
     endif()
 endmacro()
 
