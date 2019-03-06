@@ -156,13 +156,6 @@ if(xdaq_need_threads)
     find_package(Threads QUIET)
 endif()
 
-# Sets xDAQ_FOUND to FALSE if the given library isn't optional
-function(_xdaq_lib_not_found lib)
-    if(NOT xDAQ_FIND_REQUIRED_${lib})
-        set(xDAQ_FOUND FALSE)
-    endif()
-endfunction()
-
 # Creates an imported target for the given lib
 macro(_xdaq_import_lib name)
 
