@@ -35,7 +35,7 @@ _xdaq_library(logudpappender HEADER "log4cplus/log4judpappender.h"
 _xdaq_library(logxmlappender HEADER "log/xmlappender/version.h"
                              DEPENDS config log4cplus NO_SONAME)
 _xdaq_library(mimetic HEADER "mimetic/version.h")
-_xdaq_library(occi HEADER "oci.h")
+_xdaq_library(occi HEADER "occi.h")
 _xdaq_library(peer HEADER "pt/version.h" DEPENDS config toolbox xcept xoap
                    THREADS NO_SONAME)
 _xdaq_library(toolbox HEADER "toolbox/version.h"
