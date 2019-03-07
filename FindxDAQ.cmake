@@ -224,7 +224,7 @@ macro(_xdaq_import_lib name)
             HINTS ENV XDAQ_ROOT
             PATHS /opt/xdaq/
             PATH_SUFFIXES lib lib64
-            DOC "Root directory of the xDAQ installation")
+            DOC "Path of xDAQ library ${name}")
 
         mark_as_advanced(xDAQ_${name}_LIBRARY)
 
@@ -236,7 +236,7 @@ macro(_xdaq_import_lib name)
             HINTS ENV XDAQ_ROOT
             PATHS /opt/xdaq/
             PATH_SUFFIXES include
-            DOC "Root directory of the xDAQ installation")
+            DOC "xDAQ include directory")
 
         mark_as_advanced(xDAQ_INCLUDE_DIRS)
 
@@ -294,7 +294,8 @@ endforeach()
 
 # toolbox requires libuuid from the system
 if(TARGET xDAQ::toolbox)
-    find_library(xDAQ_uuid_LIBRARY uuid)
+    find_library(xDAQ_uuid_LIBRARY uuid
+                 DOC "Path of the uuid library used by xDAQ")
     mark_as_advanced(xDAQ_uuid_LIBRARY)
 
     set_property(TARGET xDAQ::toolbox
