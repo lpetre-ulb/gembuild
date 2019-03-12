@@ -1,62 +1,61 @@
-#[========================================================================[.rst:
-
-FindxDAQ
---------
-
-This module can be used to find libraries provided by the xDAQ framework. It can
-be used using the standard
-`find_package <https://cmake.org/cmake/help/latest/command/find_package.html>`_
-function. It is possible to specify the list of required libraries using the
-`COMPONENTS` and `OPTIONAL_COMPONENTS` arguments of `find_package` (all
-components are required if nothing is specified). The following libraries are
-supported:
-
-* `asyncresolv`
-* `cgicc`
-* `config`
-* `i2o`
-* `log4cplus`
-* `logudpappender`
-* `logxmlappender`
-* `mimetic`
-* `occi`
-* `peer`
-* `toolbox`
-* `tstoreclient`
-* `tstoreutils`
-* `tstore`
-* `xalan-c`
-* `xcept`
-* `xdata`
-* `xdaq`
-* `xdaq2rc`
-* `xerces-c`
-* `xgi`
-* `xoap`
-
-A target of the form `xDAQ::<lib>` is created for every library. Dependencies
-are handled automatically.
-
-The following variables are set by this module:
-
-::
-
-    xDAQ_FOUND          -- If xDAQ was found
-
-    xDAQ_VERSION        -- xDAQ version found e.g. 3.4.0
-    xDAQ_VERSION_MAJOR  -- xDAQ major version found e.g. 3
-    xDAQ_VERSION_MINOR  -- xDAQ minor version found e.g. 4
-    xDAQ_VERSION_PATCH  -- For compatibility only, always 0
-
-    xDAQ_INCLUDE_DIRS   -- xDAQ include directories
-    xDAQ_<lib>_LIBARRY  -- Location of the 'lib' library
-
-..note::
-
-    Version checking depends on the `xcept` library and will not work if it is
-    not present.
-
-#]========================================================================]
+#.rst:
+#
+# FindxDAQ
+# --------
+#
+# This module can be used to find libraries provided by the xDAQ framework. It can
+# be used using the standard
+# `find_package <https://cmake.org/cmake/help/latest/command/find_package.html>`_
+# function. It is possible to specify the list of required libraries using the
+# `COMPONENTS` and `OPTIONAL_COMPONENTS` arguments of `find_package` (all
+# components are required if nothing is specified). The following libraries are
+# supported:
+#
+# * `asyncresolv`
+# * `cgicc`
+# * `config`
+# * `i2o`
+# * `log4cplus`
+# * `logudpappender`
+# * `logxmlappender`
+# * `mimetic`
+# * `occi`
+# * `peer`
+# * `toolbox`
+# * `tstoreclient`
+# * `tstoreutils`
+# * `tstore`
+# * `xalan-c`
+# * `xcept`
+# * `xdata`
+# * `xdaq`
+# * `xdaq2rc`
+# * `xerces-c`
+# * `xgi`
+# * `xoap`
+#
+# A target of the form `xDAQ::<lib>` is created for every library. Dependencies
+# are handled automatically.
+#
+# The following variables are set by this module:
+#
+# ::
+#
+#     xDAQ_FOUND          -- If xDAQ was found
+#
+#     xDAQ_VERSION        -- xDAQ version found e.g. 3.4.0
+#     xDAQ_VERSION_MAJOR  -- xDAQ major version found e.g. 3
+#     xDAQ_VERSION_MINOR  -- xDAQ minor version found e.g. 4
+#     xDAQ_VERSION_PATCH  -- For compatibility only, always 0
+#
+#     xDAQ_INCLUDE_DIRS   -- xDAQ include directories
+#     xDAQ_<lib>_LIBARRY  -- Location of the 'lib' library
+#
+# ..note::
+#
+#     Version checking depends on the `xcept` library and will not work if it is
+#     not present.
+#
 
 include(CMakeParseArguments)
 include(FindPackageHandleStandardArgs)
