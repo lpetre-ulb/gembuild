@@ -1,0 +1,177 @@
+# Copied from Kexi on 2019-03-18.
+#
+# https://github.com/KDE/kexi/blob/master/cmake/modules/FindMySQL.cmake
+#
+# Original contents of the COPYING-CMAKE-SCRIPTS file:
+#
+# -----------------------------------------------------------------------------
+# Copyright (c) The Regents of the University of California.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+# 3. Neither the name of the University nor the names of its contributors
+#    may be used to endorse or promote products derived from this software
+#    without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+# -----------------------------------------------------------------------------
+
+# - Try to find MySQL / MySQL Embedded library
+# Find the MySQL includes and client library
+# This module defines
+#  MYSQL_INCLUDE_DIR, where to find mysql.h
+#  MYSQL_LIBRARIES, the libraries needed to use MySQL.
+#  MYSQL_LIB_DIR, path to the MYSQL_LIBRARIES
+#  MYSQL_EMBEDDED_LIBRARIES, the libraries needed to use MySQL Embedded.
+#  MYSQL_EMBEDDED_LIB_DIR, path to the MYSQL_EMBEDDED_LIBRARIES
+#  MySQL_FOUND, If false, do not try to use MySQL.
+#  MySQL_Embedded_FOUND, If false, do not try to use MySQL Embedded.
+
+# Copyright (c) 2006-2008, Jarosław Staniek <staniek@kde.org>
+#
+# Redistribution and use is allowed according to the terms of the BSD license.
+# For details see the accompanying COPYING-CMAKE-SCRIPTS file.
+
+include(CheckCXXSourceCompiles)
+include(MacroPushRequiredVars)
+include(FeatureSummary)
+set_package_properties(MySQL PROPERTIES
+    DESCRIPTION "MySQL Client Library (libmysqlclient)" URL "http://www.mysql.com")
+
+if(WIN32)
+   find_path(MYSQL_INCLUDE_DIR mysql.h
+      PATHS
+      $ENV{MYSQL_INCLUDE_DIR}
+      $ENV{MYSQL_DIR}/include/mysql
+      $ENV{ProgramW6432}/MySQL/*/include/mysql
+      $ENV{ProgramFiles}/MySQL/*/include/mysql
+      $ENV{SystemDrive}/MySQL/*/include/mysql
+      $ENV{ProgramW6432}/*/include/mysql # MariaDB
+      $ENV{ProgramFiles}/*/include/mysql # MariaDB
+   )
+else()
+   # use pkg-config to get the directories and then use these values
+   # in the FIND_PATH() and FIND_LIBRARY() calls
+   find_package(PkgConfig)
+   pkg_check_modules(PC_MYSQL QUIET mysql mariadb)
+   if(PC_MYSQL_VERSION)
+       set(MySQL_VERSION_STRING ${PC_MYSQL_VERSION})
+   endif()
+
+   find_path(MYSQL_INCLUDE_DIR mysql.h
+      PATHS
+      $ENV{MYSQL_INCLUDE_DIR}
+      $ENV{MYSQL_DIR}/include
+      ${PC_MYSQL_INCLUDEDIR}
+      ${PC_MYSQL_INCLUDE_DIRS}
+      /usr/local/mysql/include
+      /opt/mysql/mysql/include
+      PATH_SUFFIXES
+      mysql
+   )
+endif()
+
+if(WIN32)
+   string(TOLOWER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_TOLOWER)
+
+   # path suffix for debug/release mode
+   # binary_dist: mysql binary distribution
+   # build_dist: custom build
+   if(CMAKE_BUILD_TYPE_TOLOWER MATCHES "debug")
+      set(binary_dist debug)
+      set(build_dist Debug)
+   else()
+      add_definitions(-DDBUG_OFF)
+      set(binary_dist opt)
+      set(build_dist Release)
+   endif()
+
+   set(MYSQL_LIB_PATHS
+      $ENV{MYSQL_DIR}/lib/${binary_dist}
+      $ENV{MYSQL_DIR}/libmysql/${build_dist}
+      $ENV{MYSQL_DIR}/client/${build_dist}
+      $ENV{ProgramW6432}/MySQL/*/lib/${binary_dist}
+      $ENV{ProgramFiles}/MySQL/*/lib/${binary_dist}
+      $ENV{SystemDrive}/MySQL/*/lib/${binary_dist}
+      $ENV{ProgramW6432}/*/lib # MariaDB
+      $ENV{ProgramFiles}/*/lib # MariaDB
+   )
+   find_library(_LIBMYSQL_LIBRARY NAMES libmysql
+      PATHS ${MYSQL_LIB_PATHS}
+   )
+   find_library(_MYSQLCLIENT_LIBRARY NAMES mysqlclient
+      PATHS ${MYSQL_LIB_PATHS}
+   )
+   set(MYSQL_LIBRARIES ${_LIBMYSQL_LIBRARY} ${_MYSQLCLIENT_LIBRARY})
+else()
+   find_library(_MYSQLCLIENT_LIBRARY NAMES mysqlclient
+      PATHS
+      $ENV{MYSQL_DIR}/libmysql_r/.libs
+      $ENV{MYSQL_DIR}/lib
+      $ENV{MYSQL_DIR}/lib/mysql
+      ${PC_MYSQL_LIBDIR}
+      ${PC_MYSQL_LIBRARY_DIRS}
+      PATH_SUFFIXES
+      mysql
+   )
+   set(MYSQL_LIBRARIES ${_MYSQLCLIENT_LIBRARY})
+endif()
+
+if(_LIBMYSQL_LIBRARY)
+   get_filename_component(MYSQL_LIB_DIR ${_LIBMYSQL_LIBRARY} PATH)
+   unset(_LIBMYSQL_LIBRARY)
+endif()
+if(_MYSQLCLIENT_LIBRARY)
+    if(NOT MYSQL_LIB_DIR)
+        get_filename_component(MYSQL_LIB_DIR ${_MYSQLCLIENT_LIBRARY} PATH)
+    endif()
+    unset(_MYSQLCLIENT_LIBRARY)
+endif()
+
+find_library(MYSQL_EMBEDDED_LIBRARIES NAMES mysqld
+   PATHS
+   ${MYSQL_LIB_PATHS}
+)
+
+if(MYSQL_EMBEDDED_LIBRARIES)
+   get_filename_component(MYSQL_EMBEDDED_LIB_DIR ${MYSQL_EMBEDDED_LIBRARIES} PATH)
+
+    macro_push_required_vars()
+    set( CMAKE_REQUIRED_INCLUDES ${MYSQL_INCLUDE_DIR} )
+    set( CMAKE_REQUIRED_LIBRARIES ${MYSQL_EMBEDDED_LIBRARIES} )
+    check_cxx_source_compiles( "#include <mysql.h>\nint main() { int i = MYSQL_OPT_USE_EMBEDDED_CONNECTION; }" HAVE_MYSQL_OPT_EMBEDDED_CONNECTION )
+    macro_pop_required_vars()
+endif()
+
+# Did we find anything?
+include(FindPackageHandleStandardArgs)
+
+find_package_handle_standard_args(MySQL
+                                  REQUIRED_VARS MYSQL_LIBRARIES MYSQL_INCLUDE_DIR MYSQL_LIB_DIR
+                                  VERSION_VAR MySQL_VERSION_STRING)
+if(MYSQL_EMBEDDED_LIBRARIES AND MYSQL_EMBEDDED_LIB_DIR AND HAVE_MYSQL_OPT_EMBEDDED_CONNECTION)
+    find_package_handle_standard_args(MySQL_Embedded
+                                  REQUIRED_VARS MYSQL_EMBEDDED_LIBRARIES MYSQL_INCLUDE_DIR
+                                                MYSQL_EMBEDDED_LIB_DIR
+                                                HAVE_MYSQL_OPT_EMBEDDED_CONNECTION)
+endif()
+
+mark_as_advanced(MYSQL_INCLUDE_DIR MYSQL_LIBRARIES MYSQL_LIB_DIR
+                 MYSQL_EMBEDDED_LIBRARIES MYSQL_EMBEDDED_LIB_DIR HAVE_MYSQL_OPT_EMBEDDED_CONNECTION)
