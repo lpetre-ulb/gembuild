@@ -46,6 +46,7 @@ set(CACTUS_all_libs "")
 macro(_cactus_library name)
     cmake_parse_arguments(ARG "NO_SONAME" "HEADER" "DEPENDS" ${ARGN})
 
+    set(cactus_${name}_header ${ARG_HEADER})
     set(cactus_${name}_depends ${ARG_DEPENDS})
     set(cactus_${name}_nosoname ${ARG_NO_SONAME})
     list(APPEND cactus_all_libs ${name})
@@ -53,8 +54,7 @@ endmacro()
 
 # List all supported libs and their dependencies
 _cactus_library(uhal_uhal HEADER "uhal/uhal.hpp")
-_cactus_library(amc13_amc13 HEADER "amc13/AMC13Simple.hh")
-_cactus_library(amc13_tools HEADER "amc13/AMC13.hh" DEPENDS amc13_amc13)
+_cactus_library(amc13_amc13 HEADER "amc13/AMC13.hh" NO_SONAME)
 
 # Build recursive dep lists
 macro(_cactus_build_recursive_depends lib)
@@ -127,7 +127,7 @@ macro(_cactus_import_lib name)
             CACTUS_${name}_LIBRARY
             cactus_${name}
             NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH
-            HINTS ENV XDAQ_ROOT
+            HINTS ENV CACTUS_ROOT
             PATHS /opt/cactus/
             PATH_SUFFIXES lib lib64
             DOC "Path of CACTUS library ${name}")
@@ -139,7 +139,7 @@ macro(_cactus_import_lib name)
             CACTUS_INCLUDE_DIRS
             ${cactus_${name}_header}
             NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH
-            HINTS ENV XDAQ_ROOT
+            HINTS ENV CACTUS_ROOT
             PATHS /opt/cactus/
             PATH_SUFFIXES include
             DOC "CACTUS include directory")
@@ -211,13 +211,6 @@ find_package_handle_standard_args(
     REQUIRED_VARS CACTUS_INCLUDE_DIRS CACTUS_LIBRARIES
     VERSION_VAR CACTUS_VERSION
     HANDLE_COMPONENTS)
-
-# i2o requires an additional definition
-if(TARGET CACTUS::i2o)
-    set_property(TARGET CACTUS::i2o
-                 APPEND PROPERTY INTERFACE_COMPILE_DEFINITIONS
-                 LITTLE_ENDIAN__)
-endif()
 
 # Cleanup
 foreach(name ${cactus_all_libs})
