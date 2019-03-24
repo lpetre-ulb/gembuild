@@ -313,10 +313,10 @@ if(NOT IS_DIRECTORY "${xDAQ_HTML_DIR}")
 endif()
 
 # Extract version information
-if(xDAQ_INCLUDE_DIRS AND EXISTS "${xDAQ_INCLUDE_DIR}/xcept/version.h")
+if(xDAQ_INCLUDE_DIRS AND EXISTS "${xDAQ_INCLUDE_DIRS}/xcept/version.h")
     # xcept seems to be fundamental in xDAQ, so we assume it should always be
     # present. xDAQ would be quite useless otherwise.
-    file(STRINGS "${xDAQ_INCLUDE_DIR}/xcept/version.h"
+    file(STRINGS "${xDAQ_INCLUDE_DIRS}/xcept/version.h"
          version_h_contents REGEX "#define XCEPT_VERSION_")
 
     foreach(line ${version_h_contents})
