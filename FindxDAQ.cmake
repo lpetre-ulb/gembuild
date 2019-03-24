@@ -53,6 +53,11 @@
 #     xDAQ_HTML_DIR       -- Location of xDAQ HTML documents
 #     xDAQ_<lib>_LIBARRY  -- Location of the 'lib' library
 #
+# If `occi` is requested, `FindxDAQ` will look for `occi-abicompat` and add it
+# as an interface library if it is present. Set `xDAQ_SEARCH_OCCI_COMPAT` to
+# `FALSE` to turn off this behavior. When `occi-abicompat` is used, the variable
+# `xDAQ_USES_OCCI_ABICOMPAT` is set to `TRUE`.
+#
 # ..note::
 #
 #     Version checking depends on the `xcept` library and will not work if it is
@@ -303,6 +308,18 @@ if(TARGET xDAQ::toolbox)
     set_property(TARGET xDAQ::toolbox
                  APPEND PROPERTY INTERFACE_LINK_LIBRARIES
                  ${xDAQ_uuid_LIBRARY})
+endif()
+
+# Search for occi-abicompat
+if(xDAQ_SEARCH_OCCI_COMPAT AND TARGET xDAQ::occi)
+    if(NOT DEFINED xDAQ_SEARCH_OCCI_COMPAT)
+        set(xDAQ_SEARCH_OCCI_COMPAT TRUE)
+    endif()
+    find_package(OCCICompat QUIET)
+    if(OCCICompat_FOUND)
+        set(xDAQ_USES_OCCI_ABICOMPAT TRUE)
+        target_link_libraries(xDAQ::occi INTERFACE occi-abicompat)
+    endif()
 endif()
 
 # Set the HTML directory
