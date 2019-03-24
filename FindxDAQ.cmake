@@ -50,6 +50,7 @@
 #     xDAQ_VERSION_PATCH  -- For compatibility only, always 0
 #
 #     xDAQ_INCLUDE_DIRS   -- xDAQ include directories
+#     xDAQ_HTML_DIR       -- Location of xDAQ HTML documents
 #     xDAQ_<lib>_LIBARRY  -- Location of the 'lib' library
 #
 # ..note::
@@ -304,6 +305,13 @@ if(TARGET xDAQ::toolbox)
                  ${xDAQ_uuid_LIBRARY})
 endif()
 
+# Set the HTML directory
+get_filename_component(xDAQ_HTML_DIR "${xDAQ_INCLUDE_DIRS}/../htdocs" ABSOLUTE CACHE)
+mark_as_advanced(xDAQ_HTML_DIR)
+if(NOT IS_DIRECTORY "${xDAQ_HTML_DIR}")
+    set(xDAQ_HTML_DIR xDAQ_HTML_DIR-NOTFOUND)
+endif()
+
 # Extract version information
 if(xDAQ_INCLUDE_DIRS AND EXISTS "${xDAQ_INCLUDE_DIR}/xcept/version.h")
     # xcept seems to be fundamental in xDAQ, so we assume it should always be
@@ -343,7 +351,7 @@ list(REMOVE_DUPLICATES xDAQ_LIBRARIES)
 find_package_handle_standard_args(
     xDAQ
     FOUND_VAR xDAQ_FOUND
-    REQUIRED_VARS xDAQ_INCLUDE_DIRS xDAQ_LIBRARIES
+    REQUIRED_VARS xDAQ_INCLUDE_DIRS xDAQ_LIBRARIES xDAQ_HTML_DIR
     VERSION_VAR xDAQ_VERSION
     HANDLE_COMPONENTS)
 
