@@ -13,6 +13,7 @@
 #
 # * `asyncresolv`
 # * `cgicc`
+# * `clntsh` (OCI)
 # * `config`
 # * `i2o`
 # * `log4cplus`
@@ -20,7 +21,6 @@
 # * `logxmlappender`
 # * `mimetic`
 # * `occi`
-# * `ociei` (OCI)
 # * `peer`
 # * `toolbox`
 # * `tstoreclient`
@@ -87,6 +87,7 @@ endmacro()
 # List all supported libs and their dependencies
 _xdaq_library(asyncresolv HEADER "asyncresolv/config.h")
 _xdaq_library(cgicc HEADER "cgicc/Cgicc.h")
+_xdaq_library(clntsh HEADER "oci.h")
 _xdaq_library(config HEADER "config/PackageInfo.h" DEPENDS xcept NO_SONAME)
 _xdaq_library(i2o HEADER "i2o/version.h" DEPENDS config toolbox xcept NO_SONAME)
 _xdaq_library(log4cplus HEADER "log4cplus/config.hxx")
@@ -95,8 +96,7 @@ _xdaq_library(logudpappender HEADER "log4cplus/log4judpappender.h"
 _xdaq_library(logxmlappender HEADER "log/xmlappender/version.h"
                              DEPENDS config log4cplus NO_SONAME)
 _xdaq_library(mimetic HEADER "mimetic/version.h")
-_xdaq_library(occi HEADER "occi.h" DEPENDS ociei)
-_xdaq_library(ociei HEADER "oci.h")
+_xdaq_library(occi HEADER "occi.h" DEPENDS clntsh)
 _xdaq_library(peer HEADER "pt/version.h" DEPENDS config toolbox xcept xoap
                    THREADS NO_SONAME)
 _xdaq_library(toolbox HEADER "toolbox/version.h"
